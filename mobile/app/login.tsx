@@ -1,135 +1,5 @@
-// import { useFonts } from "expo-font";
-// import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
-// import * as SplashScreen from "expo-splash-screen";
-// import { useEffect } from "react";
-// import { useRouter, useSegments } from "expo-router";
-// import "react-native-reanimated";
-
-// import { useColorScheme } from "@/components/useColorScheme";
-
-// export {
-//   ErrorBoundary,
-// } from "expo-router";
-
-// export const unstable_settings = {
-//   initialRouteName: "(tabs)",
-// };
-
-// SplashScreen.preventAutoHideAsync();
-
-// export default function RootLayout() {
-//   const [loaded, error] = useFonts({
-//     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-//   });
-
-//   useEffect(() => {
-//     if (error) throw error;
-//   }, [error]);
-
-//   useEffect(() => {
-//     if (loaded) {
-//       SplashScreen.hideAsync();
-//     }
-//   }, [loaded]);
-
-//   if (!loaded) {
-//     return null;
-//   }
-
-//   return <RootLayoutNav />;
-// }
-
-// function RootLayoutNav() {
-//   const colorScheme = useColorScheme();
-
-//   const router = useRouter();
-//   const segments = useSegments();
-
-//   useEffect(() => {
-//     const checkAuthentication = () => {
-//       const token = localStorage.getItem("access_token");
-
-//       const firstSegment = segments[0];
-
-//       const publicRoutes = [
-//         "login",
-//         "signup",
-//       ];
-
-//       const isPublicRoute =
-//         firstSegment && publicRoutes.includes(firstSegment);
-
-//       const isAuthenticated = !!token;
-
-//       // User is NOT logged in and trying to access
-//       // a protected page.
-//       if (!isAuthenticated && !isPublicRoute) {
-//         router.replace("/login");
-//         return;
-//       }
-
-//       // User is already logged in and opens
-//       // login/signup page.
-//       if (
-//         isAuthenticated &&
-//         isPublicRoute
-//       ) {
-//         router.replace("/");
-//       }
-//     };
-
-//     checkAuthentication();
-//   }, [segments]);
-
-//   return (
-//     <ThemeProvider
-//       value={
-//         colorScheme === "dark"
-//           ? DarkTheme
-//           : DefaultTheme
-//       }
-//     >
-//       <Stack>
-//         <Stack.Screen
-//           name="(tabs)"
-//           options={{
-//             headerShown: false,
-//           }}
-//         />
-
-//         <Stack.Screen
-//           name="login"
-//           options={{
-//             headerShown: false,
-//           }}
-//         />
-
-//         <Stack.Screen
-//           name="signup"
-//           options={{
-//             headerShown: false,
-//           }}
-//         />
-
-//         <Stack.Screen
-//           name="modal"
-//           options={{
-//             presentation: "modal",
-//           }}
-//         />
-//       </Stack>
-//     </ThemeProvider>
-//   );
-// }
-
-
-
-
-
-
-
-
 import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   StyleSheet,
   Text,
@@ -138,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+
 
 const API_URL = "http://127.0.0.1:8001";
 
@@ -178,7 +49,8 @@ export default function LoginScreen() {
         return;
       }
 
-      localStorage.setItem("access_token", data.access_token);
+      // localStorage.setItem("access_token", data.access_token);
+      await AsyncStorage.setItem("access_token", data.access_token);
 
       router.replace("/");
     } catch (error) {
