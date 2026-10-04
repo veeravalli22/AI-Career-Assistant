@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 
-const API_BASE_URL = "http://127.0.0.1:8001";
+const API_BASE_URL = "https://ai-career-assistant-5pqr.onrender.com";
 
 type Question = {
   question_number: number;

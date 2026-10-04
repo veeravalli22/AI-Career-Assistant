@@ -27,7 +27,7 @@ type ChatSession = {
   updated_at?: string;
 };
 
-const API_BASE_URL = "http://127.0.0.1:8001";
+const API_BASE_URL = "https://ai-career-assistant-5pqr.onrender.com";
 
 const WELCOME_MESSAGE =
   "Hi! 👋 I am your AI Career Assistant. Ask me anything about your career, resume, skills, interviews, jobs, or placement preparation.";

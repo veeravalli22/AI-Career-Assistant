@@ -9,7 +9,7 @@ import {
 import { router } from "expo-router";
 import { useState } from "react";
 
-const API_URL = "http://127.0.0.1:8001";
+const API_URL = "https://ai-career-assistant-5pqr.onrender.com";
 
 export default function SignupScreen() {
   const [fullName, setFullName] = useState("");

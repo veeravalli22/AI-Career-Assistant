@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 
 import { router } from "expo-router";
 
-const API_URL = "http://127.0.0.1:8001";
+const API_URL = "https://ai-career-assistant-5pqr.onrender.com";
 
 type CareerProfile = {
   id?: number;
