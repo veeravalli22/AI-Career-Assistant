@@ -9,3 +9,4 @@ google-generativeai
 python-multipart
 pydantic
 pydantic-settings
+email-validator
