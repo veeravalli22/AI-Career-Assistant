@@ -5,7 +5,7 @@ psycopg[binary]
 python-dotenv
 python-jose[cryptography]
 passlib[bcrypt]
-google-genai# google-generativeai
+google-genai
 python-multipart
 pydantic
 pydantic-settings
