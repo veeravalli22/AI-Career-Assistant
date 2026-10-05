@@ -1,2910 +1,9 @@
-// //  import React, {
-// //   useEffect,
-// //   useRef,
-// //   useState,
-// // } from "react";
-// // import {
-// //   ActivityIndicator,
-// //   Alert,
-// //   Platform,
-// //   Pressable,
-// //   ScrollView,
-// //   StyleSheet,
-// //   Text,
-// //   View,
-// // } from "react-native";
-// // import * as DocumentPicker from "expo-document-picker";
-// // // =========================================================
-// // // API
-// // // =========================================================
-// // const API_URL = "https://ai-career-assistant-5pqr.onrender.com";
-// // // =========================================================
-// // // STORAGE
-// // // =========================================================
-// // const SAVED_RESUME_ANALYSIS_KEY =
-// //   "saved_resume_analysis_v2";
-// // const OLD_SAVED_RESUME_ANALYSIS_KEY =
-// //   "saved_resume_analysis";
-// // // =========================================================
-// // // TYPES
-// // // =========================================================
-// // type Skills = {
-// //   programming_languages: string[];
-// //   web_technologies: string[];
-// //   databases: string[];
-// //   tools_platforms: string[];
-// //   other: string[];
-// // };
-// // type LearnNextItem = {
-// //   skill: string;
-// //   fresher_topics: string[];
-// //   goal: string;
-// //   advanced_topics: string[];
-// // };
-// // type ProjectIdea = {
-// //   project_name: string;
-// //   description: string;
-// //   technologies: string[];
-// //   actual_output: string[];
-// // };
-// // type CareerAnalysis = {
-// //   what_you_already_have: string[];
-// //   learn_next: LearnNextItem[];
-// //   jobs_you_can_apply_for: string[];
-// //   what_you_should_improve: string[];
-// //   your_next_step: string[];
-// //   project_ideas: ProjectIdea[];
-// // };
-// // type ResumeAnalysis = {
-// //   summary: string;
-// //   education: string[];
-// //   education_details?: string[];
-// //   specialization?: string;
-// //   skills: Skills;
-// //   skill_details?: string[];
-// //   projects: string[];
-// //   certifications: string[];
-// //   internships_experience: string[];
-// //   languages?: string[];
-// //   achievements?: string[];
-// //   personal_information?: string[];
-// //   profile_found?: boolean;
-// //   career_analysis: CareerAnalysis;
-// // };
-// // // =========================================================
-// // // HELPERS
-// // // =========================================================
-// // function cleanText(value: any): string {
-// //   if (value === null || value === undefined) return "";
 
-// //   if (typeof value === "string") {
-// //     return value
-// //       .replace(/\*\*\*/g, "")
-// //       .replace(/\*\*/g, "")
-// //       .replace(/^#+\s*/, "")
-// //       .replace(/^[-•]\s*/, "")
-// //       .trim();
-// //   }
-
-// //   if (typeof value === "number" || typeof value === "boolean") {
-// //     return String(value);
-// //   }
-
-// //   if (Array.isArray(value)) {
-// //     return value.map((item) => cleanText(item)).filter(Boolean).join(", ");
-// //   }
-
-// //   if (typeof value === "object") {
-// //     const obj = value as Record<string, any>;
-
-// //     if (obj.value !== undefined) {
-// //       return cleanText(obj.value);
-// //     }
-
-// //     if (obj.name !== undefined && obj.issuer !== undefined) {
-// //       const name = cleanText(obj.name);
-// //       const issuer = cleanText(obj.issuer);
-// //       return issuer ? `${name} — ${issuer}` : name;
-// //     }
-
-// //     if (obj.role !== undefined) {
-// //       const role = cleanText(obj.role);
-// //       const reason = cleanText(obj.reason);
-// //       return reason ? `${role} — ${reason}` : role;
-// //     }
-
-// //     if (obj.title !== undefined) {
-// //       const title = cleanText(obj.title);
-// //       const description = cleanText(obj.description);
-// //       return description ? `${title} — ${description}` : title;
-// //     }
-
-// //     if (obj.category !== undefined && obj.value !== undefined) {
-// //       return `${cleanText(obj.category)}: ${cleanText(obj.value)}`;
-// //     }
-
-// //     const preferred = ["text", "display", "label", "course_name", "project_name"];
-// //     for (const key of preferred) {
-// //       if (obj[key] !== undefined) {
-// //         const text = cleanText(obj[key]);
-// //         if (text) return text;
-// //       }
-// //     }
-
-// //     return "";
-// //   }
-
-// //   return "";
-// // }
-
-// // function safeArray(value: any): string[] {
-// //   if (!Array.isArray(value)) return [];
-
-// //   const result: string[] = [];
-// //   const seen = new Set<string>();
-
-// //   for (const item of value) {
-// //     const text = cleanText(item);
-// //     if (!text || text === "[object Object]") continue;
-
-// //     const key = text.toLowerCase();
-// //     if (!seen.has(key)) {
-// //       seen.add(key);
-// //       result.push(text);
-// //     }
-// //   }
-
-// //   return result;
-// // }
-
-// // function formatEducationRecord(record: any): string {
-// //   if (typeof record === "string") {
-// //     return cleanText(record);
-// //   }
-
-// //   if (!record || typeof record !== "object") {
-// //     return "";
-// //   }
-
-// //   const degree = cleanText(record.degree || record.qualification);
-// //   const specialization = cleanText(record.specialization);
-// //   const college = cleanText(record.college);
-// //   const cgpa = cleanText(record.cgpa || record.gpa);
-// //   const percentage = cleanText(record.percentage);
-// //   const duration = cleanText(record.duration);
-
-// //   let qualification = degree;
-
-// //   if (degree.toUpperCase() === "MBA") {
-// //     qualification = specialization
-// //       ? `MBA — ${specialization}`
-// //       : "MBA";
-// //   } else if (
-// //     degree.toUpperCase().replace(/\s/g, "") === "B.SC." ||
-// //     degree.toUpperCase().replace(/\s/g, "") === "B.SC"
-// //   ) {
-// //     qualification = specialization
-// //       ? `B.Sc. (${specialization})`
-// //       : "B.Sc.";
-// //   }
-
-// //   const details = [
-// //     qualification,
-// //     duration,
-// //     cgpa ? `CGPA: ${cgpa}` : "",
-// //     percentage ? `${percentage.replace(/%$/, "")}%` : "",
-// //   ]
-// //     .filter(Boolean)
-// //     .join(" | ");
-
-// //   if (college && details) {
-// //     return `${college} — ${details}`;
-// //   }
-
-// //   return college || details;
-// // }
-
-// // function normalizeEducation(raw: any): { education: string[]; details: string[] } {
-// //   // Prefer the backend's already-formatted education strings.
-// //   // They contain the exact college + degree + year + CGPA.
-// //   const direct = safeArray(raw?.education);
-// //   if (direct.length > 0) {
-// //     return {
-// //       education: direct,
-// //       details: [],
-// //     };
-// //   }
-
-// //   const source = Array.isArray(raw?.education_details)
-// //     ? raw.education_details
-// //     : [];
-
-// //   const formatted: string[] = [];
-// //   const seen = new Set<string>();
-
-// //   for (const record of source) {
-// //     const value = formatEducationRecord(record);
-// //     if (!value) continue;
-
-// //     const key = value.toLowerCase().replace(/\s+/g, " ").trim();
-// //     if (!seen.has(key)) {
-// //       seen.add(key);
-// //       formatted.push(value);
-// //     }
-// //   }
-
-// //   return {
-// //     education: formatted,
-// //     details: [],
-// //   };
-// // }
-
-// // const PROGRAMMING_LANGUAGE_NAMES = [
-// //   "c", "c++", "c#", "java", "python", "javascript", "typescript",
-// //   "kotlin", "swift", "php", "ruby", "go", "rust", "scala",
-// // ];
-
-// // const HUMAN_LANGUAGE_NAMES = [
-// //   "english", "telugu", "hindi", "kannada", "tamil", "malayalam",
-// //   "marathi", "bengali", "gujarati", "punjabi", "urdu", "odia", "odisha",
-// // ];
-
-// // function normalizeLanguages(value: any): string[] {
-// //   const rawItems = Array.isArray(value)
-// //     ? value
-// //     : typeof value === "string"
-// //       ? value.split(/,|;|\||\s+&\s+/)
-// //       : [];
-
-// //   const result: string[] = [];
-// //   const seen = new Set<string>();
-
-// //   for (const item of rawItems) {
-// //     const text = cleanText(item);
-// //     if (!text) continue;
-
-// //     const lower = text.toLowerCase();
-// //     if (PROGRAMMING_LANGUAGE_NAMES.some((name) => lower === name || lower.startsWith(`${name} `))) {
-// //       continue;
-// //     }
-
-// //     if (HUMAN_LANGUAGE_NAMES.some((name) => lower.includes(name))) {
-// //       const parts = text.split(/,|;|\||\s+&\s+/).map(cleanText).filter(Boolean);
-// //       for (const part of parts) {
-// //         if (HUMAN_LANGUAGE_NAMES.some((name) => part.toLowerCase().includes(name))) {
-// //           const key = part.toLowerCase();
-// //           if (!seen.has(key)) {
-// //             seen.add(key);
-// //             result.push(part);
-// //           }
-// //         }
-// //       }
-// //     }
-// //   }
-
-// //   return result;
-// // }
-
-// // function profileItemsFromObject(profile: any): string[] {
-// //   if (!profile || typeof profile !== "object") return [];
-
-// //   const result: string[] = [];
-// //   const addGroup = (label: string, value: any) => {
-// //     const items = Array.isArray(value) ? safeArray(value) : [];
-// //     for (const item of items) {
-// //       result.push(`${label}: ${item}`);
-// //     }
-// //   };
-
-// //   addGroup("Education", profile.education);
-// //   addGroup("Skill", profile.skills);
-// //   addGroup("Project", profile.projects);
-// //   addGroup("Certification", profile.certifications);
-// //   addGroup("Experience", profile.internships_experience);
-// //   addGroup("Language", profile.languages);
-// //   addGroup("Achievement", profile.achievements);
-
-// //   return result;
-// // }
-
-// // function normalizeJobRoles(value: any): string[] {
-// //   if (!Array.isArray(value)) return [];
-// //   return value
-// //     .map((item) => cleanText(item))
-// //     .filter(Boolean);
-// // }
-
-// // function normalizeProjectIdeas(value: any): ProjectIdea[] {
-// //   if (!Array.isArray(value)) return [];
-
-// //   return value
-// //     .map((item: any) => {
-// //       if (typeof item === "string") {
-// //         return {
-// //           project_name: cleanText(item),
-// //           description: "",
-// //           technologies: [],
-// //           actual_output: [],
-// //         };
-// //       }
-
-// //       if (!item || typeof item !== "object") return null;
-
-// //       return {
-// //         project_name: cleanText(
-// //           item.project_name || item.title || item.name
-// //         ),
-// //         description: cleanText(item.description),
-// //         technologies: safeArray(item.technologies),
-// //         actual_output: safeArray(
-// //           item.actual_output || item.output || item.outputs
-// //         ),
-// //       };
-// //     })
-// //     .filter((item): item is ProjectIdea => Boolean(item?.project_name));
-// // }
-
-// // function fallbackProjectIdeas(specialization: string): ProjectIdea[] {
-// //   const value = specialization.toLowerCase();
-
-// //   if (value.includes("finance") && value.includes("hr")) {
-// //     return [
-// //       {
-// //         project_name: "HR & Payroll Analytics Dashboard",
-// //         description: "Analyze employee salary, payroll, attendance and HR metrics.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Payroll dashboard", "HR KPI charts", "Employee cost analysis"],
-// //       },
-// //       {
-// //         project_name: "Recruitment Cost & Hiring Analytics",
-// //         description: "Track hiring cost, time-to-hire and recruitment performance.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Recruitment KPI dashboard", "Hiring funnel", "Cost analysis"],
-// //       },
-// //       {
-// //         project_name: "Employee Compensation Analysis",
-// //         description: "Compare salaries, departments, benefits and compensation trends.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Salary comparison", "Department analysis", "Compensation dashboard"],
-// //       },
-// //       {
-// //         project_name: "Finance & HR Management Dashboard",
-// //         description: "Combine department budgets, employee costs and workforce metrics.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Budget dashboard", "Employee cost metrics", "Management KPI report"],
-// //       },
-// //     ];
-// //   }
-
-// //   if (value.includes("finance")) {
-// //     return [
-// //       {
-// //         project_name: "Personal Expense & Budget Analyzer",
-// //         description: "Track income, expenses, budgets and spending patterns.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Expense dashboard", "Budget summary", "Monthly spending charts"],
-// //       },
-// //       {
-// //         project_name: "Financial Statement Analysis Dashboard",
-// //         description: "Analyze revenue, expenses, profit and financial ratios.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Financial KPI dashboard", "Ratio analysis", "Trend charts"],
-// //       },
-// //       {
-// //         project_name: "Investment Analysis Dashboard",
-// //         description: "Compare investment returns, risk and performance.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Return comparison", "Risk analysis", "Investment dashboard"],
-// //       },
-// //       {
-// //         project_name: "Sales & Revenue Analysis",
-// //         description: "Analyze sales performance, revenue trends and product contribution.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Sales dashboard", "Revenue trends", "Product analysis"],
-// //       },
-// //     ];
-// //   }
-
-// //   if (value.includes("hr") || value.includes("human resource")) {
-// //     return [
-// //       {
-// //         project_name: "Recruitment Analytics Dashboard",
-// //         description: "Analyze applications, interview stages, hiring time and recruitment sources.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Recruitment funnel", "Time-to-hire report", "Hiring KPI dashboard"],
-// //       },
-// //       {
-// //         project_name: "Employee Management System",
-// //         description: "Maintain employee records, departments and employment information.",
-// //         technologies: ["Python", "SQL"],
-// //         actual_output: ["Employee records", "Search and update functions", "Employee report"],
-// //       },
-// //       {
-// //         project_name: "Employee Attendance & Leave System",
-// //         description: "Track attendance, leave requests and monthly attendance summaries.",
-// //         technologies: ["Python", "SQL"],
-// //         actual_output: ["Attendance report", "Leave summary", "Monthly dashboard"],
-// //       },
-// //       {
-// //         project_name: "Employee Performance Dashboard",
-// //         description: "Track performance ratings, goals and department-level metrics.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Performance KPIs", "Department comparison", "Employee performance report"],
-// //       },
-// //     ];
-// //   }
-
-// //   if (value.includes("marketing")) {
-// //     return [
-// //       {
-// //         project_name: "Sales & Marketing Analytics Dashboard",
-// //         description: "Analyze sales, campaigns, customers and marketing performance.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Campaign KPIs", "Sales trends", "Marketing dashboard"],
-// //       },
-// //       {
-// //         project_name: "Customer Segmentation System",
-// //         description: "Group customers using purchase and engagement information.",
-// //         technologies: ["Python", "Excel"],
-// //         actual_output: ["Customer segments", "Segment summary", "Customer insights"],
-// //       },
-// //       {
-// //         project_name: "Marketing Campaign Analyzer",
-// //         description: "Compare campaign reach, engagement and conversion performance.",
-// //         technologies: ["Excel", "Power BI"],
-// //         actual_output: ["Campaign comparison", "Conversion report", "Performance dashboard"],
-// //       },
-// //     ];
-// //   }
-
-// //   return [
-// //     {
-// //       project_name: "Job & Skill Gap Analyzer",
-// //       description: "Compare a student's resume skills with job requirements and identify missing skills.",
-// //       technologies: ["Python", "FastAPI", "React Native", "PostgreSQL"],
-// //       actual_output: ["Skill comparison", "Missing skills list", "Learning recommendations"],
-// //     },
-// //     {
-// //       project_name: "Student Placement Preparation App",
-// //       description: "Help students prepare for aptitude, coding, interview and placement activities.",
-// //       technologies: ["Python", "React Native", "PostgreSQL"],
-// //       actual_output: ["Practice modules", "Progress tracking", "Interview preparation"],
-// //     },
-// //     {
-// //       project_name: "AI Resume Analyzer",
-// //       description: "Analyze resumes and generate structured career recommendations.",
-// //       technologies: ["Python", "FastAPI", "Gemini API", "React Native"],
-// //       actual_output: ["Resume analysis", "Skill recommendations", "Career guidance"],
-// //     },
-// //     {
-// //       project_name: "Full Stack Job Portal",
-// //       description: "Create a job portal where users can search, save and apply for jobs.",
-// //       technologies: ["React", "Node.js", "PostgreSQL"],
-// //       actual_output: ["Job search", "User accounts", "Application tracking"],
-// //     },
-// //   ];
-// // }
-
-// // function createEmptyAnalysis(): ResumeAnalysis {
-// //   return {
-// //     summary: "",
-// //     education: [],
-// //     education_details: [],
-// //     specialization: "",
-// //     skills: {
-// //       programming_languages: [],
-// //       web_technologies: [],
-// //       databases: [],
-// //       tools_platforms: [],
-// //       other: [],
-// //     },
-// //     skill_details: [],
-// //     projects: [],
-// //     certifications: [],
-// //     internships_experience: [],
-// //     languages: [],
-// //     achievements: [],
-// //     personal_information: [],
-// //     profile_found: false,
-// //     career_analysis: {
-// //       what_you_already_have: [],
-// //       learn_next: [],
-// //       jobs_you_can_apply_for: [],
-// //       what_you_should_improve: [],
-// //       your_next_step: [],
-// //       project_ideas: [],
-// //     },
-// //   };
-// // }
-
-// // // =========================================================
-// // // ANALYSIS NORMALIZER
-// // // =========================================================
-// // function normalizeAnalysis(value: any): ResumeAnalysis {
-// //   let raw = value;
-
-// //   if (typeof raw === "string") {
-// //     try {
-// //       raw = JSON.parse(raw);
-// //     } catch {
-// //       throw new Error("Backend returned invalid resume analysis.");
-// //     }
-// //   }
-
-// //   if (raw?.analysis && typeof raw.analysis === "object") {
-// //     raw = raw.analysis;
-// //   }
-
-// //   if (raw?.data?.analysis && typeof raw.data.analysis === "object") {
-// //     raw = raw.data.analysis;
-// //   }
-
-// //   const education = normalizeEducation(raw);
-// //   const careerRaw = raw?.career_analysis || {};
-
-// //   const learnNext: LearnNextItem[] = Array.isArray(careerRaw.learn_next)
-// //     ? careerRaw.learn_next.map((item: any) => ({
-// //         skill: cleanText(item?.skill || item?.course_name || item?.name),
-// //         fresher_topics: safeArray(item?.fresher_topics),
-// //         goal: cleanText(item?.goal),
-// //         advanced_topics: safeArray(item?.advanced_topics),
-// //       })).filter((item: LearnNextItem) => Boolean(item.skill))
-// //     : [];
-
-// //   const existingProfile =
-// //     safeArray(careerRaw.what_you_already_have).length > 0
-// //       ? safeArray(careerRaw.what_you_already_have)
-// //       : profileItemsFromObject(careerRaw.current_profile || raw?.current_profile);
-
-// //   const jobs = normalizeJobRoles(
-// //     careerRaw.jobs_you_can_apply_for ||
-// //       careerRaw.suitable_roles ||
-// //       raw?.jobs_you_can_apply_for
-// //   );
-
-// //   const improvements = safeArray(
-// //     careerRaw.what_you_should_improve || careerRaw.improve
-// //   );
-
-// //   const nextSteps = safeArray(
-// //     careerRaw.your_next_step || careerRaw.next_steps || raw?.your_next_step
-// //   );
-
-// //   const projectIdeas = normalizeProjectIdeas(
-// //     careerRaw.project_ideas || raw?.project_ideas
-// //   );
-
-// //   const specialization = cleanText(
-// //     raw?.specialization || careerRaw.current_profile?.specialization || ""
-// //   );
-
-// //   const fallbackJobs = jobs.length > 0
-// //     ? jobs
-// //     : specialization.toLowerCase().includes("computer")
-// //       ? ["Software Developer Trainee", "Frontend Developer Trainee"]
-// //       : specialization.toLowerCase().includes("finance")
-// //         ? ["Finance Executive / Finance Trainee", "Financial Analyst Trainee"]
-// //         : specialization.toLowerCase().includes("hr")
-// //           ? ["HR Executive / HR Trainee", "Recruitment / Talent Acquisition Trainee"]
-// //           : [];
-
-// //   const fallbackImprove = improvements.length > 0
-// //     ? improvements
-// //     : [
-// //         "Strengthen the skills marked Basic or Beginner through practical projects.",
-// //         "Build and document at least one project directly related to your target role.",
-// //         "Practice interview questions based on your target job.",
-// //       ];
-
-// //   const fallbackNextSteps = nextSteps.length > 0
-// //     ? nextSteps
-// //     : [
-// //         "Follow the recommended learning path from fresher level.",
-// //         "Build one practical project related to your target role.",
-// //         "Prepare to explain your resume projects in interviews.",
-// //         "Practice role-specific interview questions.",
-// //       ];
-
-// //   const finalProjectIdeas = projectIdeas.length > 0
-// //     ? projectIdeas
-// //     : fallbackProjectIdeas(specialization);
-
-// //   const rawLanguages = raw?.languages ?? careerRaw.current_profile?.languages;
-// //   const languages = normalizeLanguages(rawLanguages);
-
-// //   const profileFallback = existingProfile.length > 0
-// //     ? existingProfile
-// //     : [
-// //         ...education.education.map((item) => `Education: ${item}`),
-// //         ...safeArray(raw?.skills?.programming_languages).map((item) => `Skill: ${item}`),
-// //         ...safeArray(raw?.skills?.web_technologies).map((item) => `Skill: ${item}`),
-// //         ...safeArray(raw?.skills?.databases).map((item) => `Skill: ${item}`),
-// //         ...safeArray(raw?.skills?.tools_platforms).map((item) => `Skill: ${item}`),
-// //         ...safeArray(raw?.projects).map((item) => `Project: ${item}`),
-// //         ...safeArray(raw?.certifications).map((item) => `Certification: ${item}`),
-// //       ];
-
-// //   return {
-// //     summary: cleanText(raw?.summary || ""),
-// //     education: education.education,
-// //     education_details: education.details,
-// //     specialization,
-// //     skills: {
-// //       programming_languages: safeArray(raw?.skills?.programming_languages),
-// //       web_technologies: safeArray(raw?.skills?.web_technologies),
-// //       databases: safeArray(raw?.skills?.databases),
-// //       tools_platforms: safeArray(raw?.skills?.tools_platforms),
-// //       other: safeArray(raw?.skills?.other),
-// //     },
-// //     skill_details: safeArray(raw?.skill_details || raw?.skills?.details),
-// //     projects: safeArray(raw?.projects),
-// //     certifications: safeArray(raw?.certifications),
-// //     internships_experience: safeArray(raw?.internships_experience || raw?.experience),
-// //     languages,
-// //     achievements: safeArray(raw?.achievements),
-// //     personal_information: safeArray(raw?.personal_information),
-// //     profile_found: Boolean(raw?.profile_found) || profileFallback.length > 0,
-// //     career_analysis: {
-// //       what_you_already_have: profileFallback,
-// //       learn_next: learnNext,
-// //       jobs_you_can_apply_for: fallbackJobs,
-// //       what_you_should_improve: fallbackImprove,
-// //       your_next_step: fallbackNextSteps,
-// //       project_ideas: finalProjectIdeas,
-// //     },
-// //   };
-// // }
-// // // =========================================================
-// // // STORAGE HELPERS
-// // // =========================================================
-// // async function saveResumeAnalysis(
-// //   analysis: ResumeAnalysis
-// // ) {
-// //   try {
-// //     const value =
-// //       JSON.stringify(analysis);
-// //     if (Platform.OS === "web") {
-// //       window.localStorage.setItem(
-// //         SAVED_RESUME_ANALYSIS_KEY,
-// //         value
-// //       );
-// //       return;
-// //     }
-// //     const AsyncStorage =
-// //       require(
-// //         "@react-native-async-storage/async-storage"
-// //       ).default;
-// //     await AsyncStorage.setItem(
-// //       SAVED_RESUME_ANALYSIS_KEY,
-// //       value
-// //     );
-// //   } catch (error) {
-// //     console.log(
-// //       "Error saving resume analysis:",
-// //       error
-// //     );
-// //   }
-// // }
-// // // =========================================================
-// // // CLEAR OLD STORAGE
-// // // =========================================================
-// // async function clearSavedResumeAnalysis() {
-// //   try {
-// //     if (Platform.OS === "web") {
-// //       window.localStorage.removeItem(
-// //         SAVED_RESUME_ANALYSIS_KEY
-// //       );
-// //       window.localStorage.removeItem(
-// //         OLD_SAVED_RESUME_ANALYSIS_KEY
-// //       );
-// //       return;
-// //     }
-// //     const AsyncStorage =
-// //       require(
-// //         "@react-native-async-storage/async-storage"
-// //       ).default;
-// //     await AsyncStorage.multiRemove([
-// //       SAVED_RESUME_ANALYSIS_KEY,
-// //       OLD_SAVED_RESUME_ANALYSIS_KEY,
-// //     ]);
-// //   } catch (error) {
-// //     console.log(
-// //       "Error clearing old resume:",
-// //       error
-// //     );
-// //   }
-// // }
-// // // =========================================================
-// // // LOAD SAVED RESUME
-// // // =========================================================
-// // async function loadResumeAnalysis(): Promise<
-// //   ResumeAnalysis | null
-// // > {
-// //   try {
-// //     let savedValue = "";
-// //     if (Platform.OS === "web") {
-// //       savedValue =
-// //         window.localStorage.getItem(
-// //           SAVED_RESUME_ANALYSIS_KEY
-// //         ) || "";
-// //     } else {
-// //       const AsyncStorage =
-// //         require(
-// //           "@react-native-async-storage/async-storage"
-// //         ).default;
-// //       savedValue =
-// //         (await AsyncStorage.getItem(
-// //           SAVED_RESUME_ANALYSIS_KEY
-// //         )) || "";
-// //     }
-// //     if (!savedValue) {
-// //       return null;
-// //     }
-// //     return normalizeAnalysis(
-// //       JSON.parse(savedValue)
-// //     );
-// //   } catch (error) {
-// //     console.log(
-// //       "Error loading resume analysis:",
-// //       error
-// //     );
-// //     return null;
-// //   }
-// // }
-// // // =========================================================
-// // // BULLET LIST
-// // // =========================================================
-// // function BulletList({
-// //   items,
-// //   emptyText = "No information found.",
-// // }: {
-// //   items?: string[];
-// //   emptyText?: string;
-// // }) {
-// //   const safeItems = safeArray(items);
-// //   if (safeItems.length === 0) {
-// //     return (
-// //       <Text style={styles.emptyText}>
-// //         {emptyText}
-// //       </Text>
-// //     );
-// //   }
-// //   return (
-// //     <View>
-// //       {safeItems.map(
-// //         (item, index) => (
-// //           <View
-// //             key={`${item}-${index}`}
-// //             style={styles.bulletRow}
-// //           >
-// //             <Text style={styles.bullet}>
-// //               •
-// //             </Text>
-// //             <Text
-// //               style={styles.bulletText}
-// //             >
-// //               {item}
-// //             </Text>
-// //           </View>
-// //         )
-// //       )}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // MAIN ACCORDION
-// // // =========================================================
-// // function MainAccordion({
-// //   title,
-// //   open,
-// //   onPress,
-// //   children,
-// // }: {
-// //   title: string;
-// //   open: boolean;
-// //   onPress: () => void;
-// //   children: React.ReactNode;
-// // }) {
-// //   return (
-// //     <View
-// //       style={styles.mainAccordion}
-// //     >
-// //       <Pressable
-// //         onPress={onPress}
-// //         style={({ pressed }) => [
-// //           styles.mainAccordionHeader,
-// //           pressed &&
-// //             styles.pressed,
-// //         ]}
-// //       >
-// //         <Text
-// //           style={
-// //             styles.mainAccordionTitle
-// //           }
-// //         >
-// //           {title}
-// //         </Text>
-// //         <Text style={styles.arrow}>
-// //           {open ? "⌃" : "›"}
-// //         </Text>
-// //       </Pressable>
-// //       {open && (
-// //         <View
-// //           style={
-// //             styles.mainAccordionBody
-// //           }
-// //         >
-// //           {children}
-// //         </View>
-// //       )}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // INNER ACCORDION
-// // // =========================================================
-// // function InnerAccordion({
-// //   title,
-// //   open,
-// //   onPress,
-// //   children,
-// // }: {
-// //   title: string;
-// //   open: boolean;
-// //   onPress: () => void;
-// //   children: React.ReactNode;
-// // }) {
-// //   return (
-// //     <View
-// //       style={styles.innerAccordion}
-// //     >
-// //       <Pressable
-// //         onPress={onPress}
-// //         style={({ pressed }) => [
-// //           styles.innerAccordionHeader,
-// //           pressed &&
-// //             styles.pressed,
-// //         ]}
-// //       >
-// //         <Text
-// //           style={
-// //             styles.innerAccordionTitle
-// //           }
-// //         >
-// //           {title}
-// //         </Text>
-// //         <Text
-// //           style={
-// //             styles.smallArrow
-// //           }
-// //         >
-// //           {open ? "⌃" : "›"}
-// //         </Text>
-// //       </Pressable>
-// //       {open && (
-// //         <View
-// //           style={
-// //             styles.innerAccordionBody
-// //           }
-// //         >
-// //           {children}
-// //         </View>
-// //       )}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // SECTION CARD
-// // // =========================================================
-// // function SectionCard({
-// //   title,
-// //   children,
-// // }: {
-// //   title: string;
-// //   children: React.ReactNode;
-// // }) {
-// //   return (
-// //     <View
-// //       style={styles.sectionCard}
-// //     >
-// //       <Text style={styles.cardTitle}>
-// //         {title}
-// //       </Text>
-// //       {children}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // SKILL GROUP
-// // // =========================================================
-// // function SkillGroup({
-// //   title,
-// //   items,
-// // }: {
-// //   title: string;
-// //   items?: string[];
-// // }) {
-// //   const safeItems =
-// //     safeArray(items);
-// //   if (safeItems.length === 0) {
-// //     return null;
-// //   }
-// //   return (
-// //     <View style={styles.skillGroup}>
-// //       <Text
-// //         style={
-// //           styles.skillGroupTitle
-// //         }
-// //       >
-// //         {title}
-// //       </Text>
-// //       <View
-// //         style={
-// //           styles.skillTagsContainer
-// //         }
-// //       >
-// //         {safeItems.map(
-// //           (item, index) => (
-// //             <View
-// //               key={`${item}-${index}`}
-// //               style={styles.skillTag}
-// //             >
-// //               <Text
-// //                 style={
-// //                   styles.skillTagText
-// //                 }
-// //               >
-// //                 {item}
-// //               </Text>
-// //             </View>
-// //           )
-// //         )}
-// //       </View>
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // YOUR RESUME
-// // // =========================================================
-// // function YourResumeSection({
-// //   analysis,
-// // }: {
-// //   analysis: ResumeAnalysis;
-// // }) {
-// //   const skills =
-// //     analysis.skills ||
-// //     createEmptyAnalysis().skills;
-// //   return (
-// //     <View>
-// //       <SectionCard
-// //         title="👤 Resume Summary"
-// //       >
-// //         {analysis.summary ? (
-// //           <Text
-// //             style={styles.normalText}
-// //           >
-// //             {cleanText(
-// //               analysis.summary
-// //             )}
-// //           </Text>
-// //         ) : (
-// //           <Text
-// //             style={styles.emptyText}
-// //           >
-// //             No summary found.
-// //           </Text>
-// //         )}
-// //       </SectionCard>
-// //       <SectionCard title="🎓 Education">
-// //         <BulletList
-// //           items={analysis.education}
-// //           emptyText="No education information found."
-// //         />
-
-// //       </SectionCard>
-// //       <SectionCard title="🛠️ Skills">
-// //         <SkillGroup
-// //           title="Programming Languages"
-// //           items={
-// //             skills.programming_languages
-// //           }
-// //         />
-// //         <SkillGroup
-// //           title="Web Technologies"
-// //           items={
-// //             skills.web_technologies
-// //           }
-// //         />
-// //         <SkillGroup
-// //           title="Databases"
-// //           items={
-// //             skills.databases
-// //           }
-// //         />
-// //         <SkillGroup
-// //           title="Tools & Platforms"
-// //           items={
-// //             skills.tools_platforms
-// //           }
-// //         />
-// //         <SkillGroup
-// //           title="Other"
-// //           items={skills.other}
-// //         />
-// //         {[
-// //           ...skills.programming_languages,
-// //           ...skills.web_technologies,
-// //           ...skills.databases,
-// //           ...skills.tools_platforms,
-// //           ...skills.other,
-// //         ].length === 0 && (
-// //           <Text
-// //             style={styles.emptyText}
-// //           >
-// //             No skills found.
-// //           </Text>
-// //         )}
-// //       </SectionCard>
-// //       <SectionCard title="🚀 Projects">
-// //         <BulletList
-// //           items={analysis.projects}
-// //           emptyText="No projects found."
-// //         />
-// //       </SectionCard>
-// //       <SectionCard
-// //         title="📜 Certifications"
-// //       >
-// //         <BulletList
-// //           items={
-// //             analysis.certifications
-// //           }
-// //           emptyText="No certifications found."
-// //         />
-// //       </SectionCard>
-// //       <SectionCard
-// //         title="💼 Internship / Experience"
-// //       >
-// //         <BulletList
-// //           items={
-// //             analysis.internships_experience
-// //           }
-// //           emptyText="No internship or experience found."
-// //         />
-// //       </SectionCard>
-// //       {safeArray(
-// //         analysis.languages
-// //       ).length > 0 && (
-// //         <SectionCard title="🌐 Languages">
-// //           <BulletList
-// //             items={
-// //               analysis.languages
-// //             }
-// //           />
-// //         </SectionCard>
-// //       )}
-// //       {safeArray(
-// //         analysis.achievements
-// //       ).length > 0 && (
-// //         <SectionCard title="🏆 Achievements">
-// //           <BulletList
-// //             items={
-// //               analysis.achievements
-// //             }
-// //           />
-// //         </SectionCard>
-// //       )}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // LEARN NEXT CARD
-// // // =========================================================
-// // function LearnNextCard({
-// //   item,
-// //   index,
-// // }: {
-// //   item: LearnNextItem;
-// //   index: number;
-// // }) {
-// //   const [
-// //     openLevel,
-// //     setOpenLevel,
-// //   ] = useState<
-// //     "fresher" | "advanced" | null
-// //   >(null);
-// //   return (
-// //     <View style={styles.learnCard}>
-// //       <View
-// //         style={styles.learnHeader}
-// //       >
-// //         <View
-// //           style={
-// //             styles.numberCircle
-// //           }
-// //         >
-// //           <Text
-// //             style={styles.numberText}
-// //           >
-// //             {index + 1}
-// //           </Text>
-// //         </View>
-// //         <View
-// //           style={
-// //             styles.learnTitleArea
-// //           }
-// //         >
-// //           <Text
-// //             style={
-// //               styles.learnSkill
-// //             }
-// //           >
-// //             {cleanText(item.skill)}
-// //           </Text>
-// //           <Text
-// //             style={
-// //               styles.learnSubText
-// //             }
-// //           >
-// //             Practical learning path
-// //             for your career.
-// //           </Text>
-// //         </View>
-// //       </View>
-// //       <InnerAccordion
-// //         title="🌱 Fresher Level"
-// //         open={
-// //           openLevel ===
-// //           "fresher"
-// //         }
-// //         onPress={() =>
-// //           setOpenLevel(
-// //             openLevel ===
-// //               "fresher"
-// //               ? null
-// //               : "fresher"
-// //           )
-// //         }
-// //       >
-// //         <Text
-// //           style={
-// //             styles.levelDescription
-// //           }
-// //         >
-// //           Learn these topics for
-// //           entry-level software jobs.
-// //         </Text>
-// //         <BulletList
-// //           items={
-// //             item.fresher_topics
-// //           }
-// //           emptyText="No fresher-level topics found."
-// //         />
-// //         {item.goal ? (
-// //           <View
-// //             style={styles.goalBox}
-// //           >
-// //             <Text
-// //               style={styles.goalLabel}
-// //             >
-// //               🎯 Fresher Goal
-// //             </Text>
-// //             <Text
-// //               style={styles.goalText}
-// //             >
-// //               {cleanText(
-// //                 item.goal
-// //               )}
-// //             </Text>
-// //           </View>
-// //         ) : null}
-// //       </InnerAccordion>
-// //       <InnerAccordion
-// //         title="🚀 After Getting a Job — Optional Advanced Topics"
-// //         open={
-// //           openLevel ===
-// //           "advanced"
-// //         }
-// //         onPress={() =>
-// //           setOpenLevel(
-// //             openLevel ===
-// //               "advanced"
-// //               ? null
-// //               : "advanced"
-// //           )
-// //         }
-// //       >
-// //         <Text
-// //           style={
-// //             styles.levelDescription
-// //           }
-// //         >
-// //           These topics are optional.
-// //           Learn them after becoming
-// //           comfortable with fresher-level
-// //           skills.
-// //         </Text>
-// //         <BulletList
-// //           items={
-// //             item.advanced_topics
-// //           }
-// //           emptyText="No advanced topics found."
-// //         />
-// //       </InnerAccordion>
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // LEARN NEXT
-// // // =========================================================
-// // function LearnNextSection({
-// //   items,
-// // }: {
-// //   items: LearnNextItem[];
-// // }) {
-// //   const [
-// //     openSkill,
-// //     setOpenSkill,
-// //   ] = useState<number | null>(
-// //     null
-// //   );
-// //   if (
-// //     !Array.isArray(items) ||
-// //     items.length === 0
-// //   ) {
-// //     return (
-// //       <Text
-// //         style={styles.emptyText}
-// //       >
-// //         No learning recommendations
-// //         found.
-// //       </Text>
-// //     );
-// //   }
-// //   return (
-// //     <View>
-// //       <Text
-// //         style={
-// //           styles.explanationText
-// //         }
-// //       >
-// //         These are the practical
-// //         skills and courses recommended
-// //         based on your current resume
-// //         and entry-level job
-// //         requirements.
-// //       </Text>
-// //       {items.map(
-// //         (item, index) => (
-// //           <View
-// //             key={`${item.skill}-${index}`}
-// //             style={
-// //               styles.courseAccordion
-// //             }
-// //           >
-// //             <Pressable
-// //               onPress={() =>
-// //                 setOpenSkill(
-// //                   openSkill === index
-// //                     ? null
-// //                     : index
-// //                 )
-// //               }
-// //               style={({
-// //                 pressed,
-// //               }) => [
-// //                 styles.courseHeader,
-// //                 pressed &&
-// //                   styles.pressed,
-// //               ]}
-// //             >
-// //               <View
-// //                 style={
-// //                   styles.courseNumber
-// //                 }
-// //               >
-// //                 <Text
-// //                   style={
-// //                     styles.courseNumberText
-// //                   }
-// //                 >
-// //                   {index + 1}
-// //                 </Text>
-// //               </View>
-// //               <Text
-// //                 style={
-// //                   styles.courseTitle
-// //                 }
-// //               >
-// //                 {cleanText(
-// //                   item.skill
-// //                 )}
-// //               </Text>
-// //               <Text
-// //                 style={
-// //                   styles.smallArrow
-// //                 }
-// //               >
-// //                 {openSkill ===
-// //                 index
-// //                   ? "⌃"
-// //                   : "›"}
-// //               </Text>
-// //             </Pressable>
-// //             {openSkill ===
-// //               index && (
-// //               <View
-// //                 style={
-// //                   styles.courseBody
-// //                 }
-// //               >
-// //                 <LearnNextCard
-// //                   item={item}
-// //                   index={index}
-// //                 />
-// //               </View>
-// //             )}
-// //           </View>
-// //         )
-// //       )}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // PROJECT IDEA
-// // // =========================================================
-// // function ProjectIdeaCard({
-// //   project,
-// //   index,
-// // }: {
-// //   project: ProjectIdea;
-// //   index: number;
-// // }) {
-// //   const [open, setOpen] =
-// //     useState(false);
-// //   return (
-// //     <View
-// //       style={
-// //         styles.projectAccordion
-// //       }
-// //     >
-// //       <Pressable
-// //         onPress={() =>
-// //           setOpen(!open)
-// //         }
-// //         style={({ pressed }) => [
-// //           styles.projectHeader,
-// //           pressed &&
-// //             styles.pressed,
-// //         ]}
-// //       >
-// //         <View
-// //           style={
-// //             styles.projectNumber
-// //           }
-// //         >
-// //           <Text
-// //             style={
-// //               styles.projectNumberText
-// //             }
-// //           >
-// //             {index + 1}
-// //           </Text>
-// //         </View>
-// //         <Text
-// //           style={
-// //             styles.projectTitle
-// //           }
-// //         >
-// //           {cleanText(
-// //             project.project_name
-// //           )}
-// //         </Text>
-// //         <Text
-// //           style={
-// //             styles.smallArrow
-// //           }
-// //         >
-// //           {open ? "⌃" : "›"}
-// //         </Text>
-// //       </Pressable>
-// //       {open && (
-// //         <View
-// //           style={
-// //             styles.projectBody
-// //           }
-// //         >
-// //           <View
-// //             style={styles.projectPart}
-// //           >
-// //             <Text
-// //               style={
-// //                 styles.projectPartTitle
-// //               }
-// //             >
-// //               📝 About the Project
-// //             </Text>
-// //             <Text
-// //               style={
-// //                 styles.normalText
-// //               }
-// //             >
-// //               {cleanText(
-// //                 project.description
-// //               ) ||
-// //                 "No project description available."}
-// //             </Text>
-// //           </View>
-// //           <View
-// //             style={styles.projectPart}
-// //           >
-// //             <Text
-// //               style={
-// //                 styles.projectPartTitle
-// //               }
-// //             >
-// //               🛠️ Technologies Used
-// //             </Text>
-// //             <View
-// //               style={
-// //                 styles.technologyContainer
-// //               }
-// //             >
-// //               {safeArray(
-// //                 project.technologies
-// //               ).map(
-// //                 (
-// //                   technology,
-// //                   techIndex
-// //                 ) => (
-// //                   <View
-// //                     key={`${technology}-${techIndex}`}
-// //                     style={
-// //                       styles.technologyTag
-// //                     }
-// //                   >
-// //                     <Text
-// //                       style={
-// //                         styles.technologyText
-// //                       }
-// //                     >
-// //                       {technology}
-// //                     </Text>
-// //                   </View>
-// //                 )
-// //               )}
-// //             </View>
-// //             {safeArray(
-// //               project.technologies
-// //             ).length === 0 && (
-// //               <Text
-// //                 style={
-// //                   styles.emptyText
-// //                 }
-// //               >
-// //                 No technologies
-// //                 listed.
-// //               </Text>
-// //             )}
-// //           </View>
-// //           <View
-// //             style={styles.projectPart}
-// //           >
-// //             <Text
-// //               style={
-// //                 styles.projectPartTitle
-// //               }
-// //             >
-// //               🖥️ Actual Output
-// //             </Text>
-// //             <BulletList
-// //               items={
-// //                 project.actual_output
-// //               }
-// //               emptyText="No output details available."
-// //             />
-// //           </View>
-// //         </View>
-// //       )}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // PROJECT IDEAS
-// // // =========================================================
-// // function ProjectIdeasSection({
-// //   projects,
-// // }: {
-// //   projects: ProjectIdea[];
-// // }) {
-// //   if (
-// //     !Array.isArray(projects) ||
-// //     projects.length === 0
-// //   ) {
-// //     return (
-// //       <Text
-// //         style={styles.emptyText}
-// //       >
-// //         No project ideas found.
-// //       </Text>
-// //     );
-// //   }
-// //   return (
-// //     <View>
-// //       <Text
-// //         style={
-// //           styles.explanationText
-// //         }
-// //       >
-// //         These project ideas are selected
-// //         based on your current skills,
-// //         recommended learning, existing
-// //         projects, and fresher-level
-// //         software roles.
-// //       </Text>
-// //       {projects.map(
-// //         (project, index) => (
-// //           <ProjectIdeaCard
-// //             key={`${project.project_name}-${index}`}
-// //             project={project}
-// //             index={index}
-// //           />
-// //         )
-// //       )}
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // CAREER ANALYSIS
-// // // =========================================================
-// // function CareerAnalysisSection({
-// //   analysis,
-// // }: {
-// //   analysis: ResumeAnalysis;
-// // }) {
-// //   const career =
-// //     analysis.career_analysis ||
-// //     createEmptyAnalysis()
-// //       .career_analysis;
-// //   const [
-// //     openSection,
-// //     setOpenSection,
-// //   ] = useState<
-// //     | "have"
-// //     | "learn"
-// //     | "jobs"
-// //     | "improve"
-// //     | "next"
-// //     | "projects"
-// //     | null
-// //   >(null);
-// //   const toggleSection = (
-// //     section:
-// //       | "have"
-// //       | "learn"
-// //       | "jobs"
-// //       | "improve"
-// //       | "next"
-// //       | "projects"
-// //   ) => {
-// //     setOpenSection(
-// //       openSection === section
-// //         ? null
-// //         : section
-// //     );
-// //   };
-// //   return (
-// //     <View
-// //       style={
-// //         styles.careerContainer
-// //       }
-// //     >
-// //       <InnerAccordion
-// //         title="💪 What You Already Have"
-// //         open={
-// //           openSection ===
-// //           "have"
-// //         }
-// //         onPress={() =>
-// //           toggleSection("have")
-// //         }
-// //       >
-// //         <Text
-// //           style={
-// //             styles.explanationText
-// //           }
-// //         >
-// //           These are the skills,
-// //           education, projects, and
-// //           other useful information
-// //           already present in your
-// //           resume.
-// //         </Text>
-
-// //         <Text style={styles.profileGroupTitle}>
-// //           🎓 Education
-// //         </Text>
-// //         <BulletList
-// //           items={analysis.education}
-// //           emptyText="No education information found."
-// //         />
-
-// //         <Text style={styles.profileGroupTitle}>
-// //           🛠️ Skills
-// //         </Text>
-// //         <Text style={styles.profileGroupText}>
-// //           {[
-// //             ...safeArray(
-// //               analysis.skills?.programming_languages
-// //             ),
-// //             ...safeArray(
-// //               analysis.skills?.web_technologies
-// //             ),
-// //             ...safeArray(
-// //               analysis.skills?.databases
-// //             ),
-// //             ...safeArray(
-// //               analysis.skills?.tools_platforms
-// //             ),
-// //             ...safeArray(
-// //               analysis.skills?.other
-// //             ),
-// //           ].join(", ") || "No skills found."}
-// //         </Text>
-
-// //         <Text style={styles.profileGroupTitle}>
-// //           🚀 Projects
-// //         </Text>
-// //         <BulletList
-// //           items={analysis.projects}
-// //           emptyText="No projects found."
-// //         />
-
-// //         <Text style={styles.profileGroupTitle}>
-// //           📜 Certifications
-// //         </Text>
-// //         <BulletList
-// //           items={analysis.certifications}
-// //           emptyText="No certifications found."
-// //         />
-
-// //         <Text style={styles.profileGroupTitle}>
-// //           🌐 Languages
-// //         </Text>
-// //         <Text style={styles.profileGroupText}>
-// //           {safeArray(analysis.languages).join(", ") ||
-// //             "No languages found."}
-// //         </Text>
-// //       </InnerAccordion>
-// //       <InnerAccordion
-// //         title="📚 What You Should Learn Next"
-// //         open={
-// //           openSection ===
-// //           "learn"
-// //         }
-// //         onPress={() =>
-// //           toggleSection("learn")
-// //         }
-// //       >
-// //         <LearnNextSection
-// //           items={
-// //             career.learn_next
-// //           }
-// //         />
-// //       </InnerAccordion>
-// //       <InnerAccordion
-// //         title="🎯 Jobs You Can Apply For"
-// //         open={
-// //           openSection ===
-// //           "jobs"
-// //         }
-// //         onPress={() =>
-// //           toggleSection("jobs")
-// //         }
-// //       >
-// //         <Text
-// //           style={
-// //             styles.explanationText
-// //           }
-// //         >
-// //           These are entry-level roles
-// //           that match your current
-// //           resume.
-// //         </Text>
-// //         <BulletList
-// //           items={
-// //             career.jobs_you_can_apply_for
-// //           }
-// //           emptyText="No suitable roles found."
-// //         />
-// //       </InnerAccordion>
-// //       <InnerAccordion
-// //         title="🛠️ What You Should Improve"
-// //         open={
-// //           openSection ===
-// //           "improve"
-// //         }
-// //         onPress={() =>
-// //           toggleSection(
-// //             "improve"
-// //           )
-// //         }
-// //       >
-// //         <Text
-// //           style={
-// //             styles.explanationText
-// //           }
-// //         >
-// //           These are the areas you
-// //           should improve based
-// //           specifically on your resume
-// //           and target software roles.
-// //         </Text>
-// //         <BulletList
-// //           items={
-// //             career.what_you_should_improve
-// //           }
-// //           emptyText="No improvement points found."
-// //         />
-// //       </InnerAccordion>
-// //       <InnerAccordion
-// //         title="➡️ Your Next Step"
-// //         open={
-// //           openSection ===
-// //           "next"
-// //         }
-// //         onPress={() =>
-// //           toggleSection("next")
-// //         }
-// //       >
-// //         {career.your_next_step
-// //           .length > 0 ? (
-// //           career.your_next_step.map(
-// //             (step, index) => (
-// //               <View
-// //                 key={`${step}-${index}`}
-// //                 style={
-// //                   styles.stepRow
-// //                 }
-// //               >
-// //                 <View
-// //                   style={
-// //                     styles.stepNumber
-// //                   }
-// //                 >
-// //                   <Text
-// //                     style={
-// //                       styles.stepNumberText
-// //                     }
-// //                   >
-// //                     {index + 1}
-// //                   </Text>
-// //                 </View>
-// //                 <Text
-// //                   style={
-// //                     styles.stepText
-// //                   }
-// //                 >
-// //                   {cleanText(step)}
-// //                 </Text>
-// //               </View>
-// //             )
-// //           )
-// //         ) : (
-// //           <Text
-// //             style={
-// //               styles.emptyText
-// //             }
-// //           >
-// //             No next steps found.
-// //           </Text>
-// //         )}
-// //       </InnerAccordion>
-// //       <InnerAccordion
-// //         title="💡 Project Ideas"
-// //         open={
-// //           openSection ===
-// //           "projects"
-// //         }
-// //         onPress={() =>
-// //           toggleSection(
-// //             "projects"
-// //           )
-// //         }
-// //       >
-// //         <ProjectIdeasSection
-// //           projects={
-// //             career.project_ideas
-// //           }
-// //         />
-// //       </InnerAccordion>
-// //     </View>
-// //   );
-// // }
-// // // =========================================================
-// // // MAIN SCREEN
-// // // =========================================================
-// // export default function ResumeScreen() {
-// //   const [loading, setLoading] =
-// //     useState(false);
-// //   const [analysis, setAnalysis] =
-// //     useState<ResumeAnalysis | null>(
-// //       null
-// //     );
-// //   const [
-// //     openSection,
-// //     setOpenSection,
-// //   ] = useState<
-// //     "resume" | "career" | null
-// //   >(null);
-// //   const [
-// //     restoring,
-// //     setRestoring,
-// //   ] = useState(true);
-// //   const [
-// //     selectedFileName,
-// //     setSelectedFileName,
-// //   ] = useState("");
-// //   // IMPORTANT:
-// //   // Prevent old saved data from coming back
-// //   // after a new resume is selected.
-// //   const hasUploadedNewResume =
-// //     useRef(false);
-// //   // =======================================================
-// //   // RESTORE SAVED RESUME
-// //   // =======================================================
-// //   useEffect(() => {
-// //     let mounted = true;
-// //     const restoreResume =
-// //       async () => {
-// //         try {
-// //           const savedAnalysis =
-// //             await loadResumeAnalysis();
-// //           if (
-// //             mounted &&
-// //             !hasUploadedNewResume.current &&
-// //             savedAnalysis
-// //           ) {
-// //             setAnalysis(
-// //               savedAnalysis
-// //             );
-// //             setOpenSection(
-// //               "resume"
-// //             );
-// //           }
-// //         } catch (error) {
-// //           console.log(
-// //             "Resume restore error:",
-// //             error
-// //           );
-// //         } finally {
-// //           if (mounted) {
-// //             setRestoring(false);
-// //           }
-// //         }
-// //       };
-// //     restoreResume();
-// //     return () => {
-// //       mounted = false;
-// //     };
-// //   }, []);
-// //   // =======================================================
-// //   // UPLOAD RESUME
-// //   // =======================================================
-// //   const uploadResume =
-// //     async () => {
-// //       try {
-// //         const result =
-// //           await DocumentPicker.getDocumentAsync(
-// //             {
-// //               type: [
-// //                 "application/pdf",
-// //                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-// //               ],
-// //               copyToCacheDirectory: true,
-// //             }
-// //           );
-// //         if (result.canceled) {
-// //           return;
-// //         }
-// //         const selectedFile =
-// //           result.assets?.[0];
-// //         if (!selectedFile) {
-// //           Alert.alert(
-// //             "File Error",
-// //             "No file was selected."
-// //           );
-// //           return;
-// //         }
-// //         // =================================================
-// //         // NEW FILE SELECTED
-// //         // CLEAR OLD RESUME IMMEDIATELY
-// //         // =================================================
-// //         hasUploadedNewResume.current =
-// //           true;
-// //         setAnalysis(null);
-// //         setOpenSection(null);
-// //         setSelectedFileName(
-// //           selectedFile.name ||
-// //             "Selected resume"
-// //         );
-// //         await clearSavedResumeAnalysis();
-// //         setLoading(true);
-// //         // =================================================
-// //         // GET TOKEN
-// //         // =================================================
-// //         let token = "";
-// //         if (
-// //           Platform.OS === "web"
-// //         ) {
-// //           token =
-// //             window.localStorage.getItem(
-// //               "access_token"
-// //             ) || "";
-// //         } else {
-// //           try {
-// //             const AsyncStorage =
-// //               require(
-// //                 "@react-native-async-storage/async-storage"
-// //               ).default;
-// //             token =
-// //               (await AsyncStorage.getItem(
-// //                 "access_token"
-// //               )) || "";
-// //           } catch (
-// //             storageError
-// //           ) {
-// //             console.log(
-// //               "AsyncStorage error:",
-// //               storageError
-// //             );
-// //           }
-// //         }
-// //         if (!token) {
-// //           Alert.alert(
-// //             "Login Required",
-// //             "Please login first."
-// //           );
-// //           setLoading(false);
-// //           return;
-// //         }
-// //         // =================================================
-// //         // FORMDATA
-// //         // =================================================
-// //         const formData =
-// //           new FormData();
-// //         if (
-// //           Platform.OS === "web"
-// //         ) {
-// //           const fileResponse =
-// //             await fetch(
-// //               selectedFile.uri
-// //             );
-// //           if (
-// //             !fileResponse.ok
-// //           ) {
-// //             throw new Error(
-// //               "Could not read the selected file."
-// //             );
-// //           }
-// //           const blob =
-// //             await fileResponse.blob();
-// //           const browserFile =
-// //             new File(
-// //               [blob],
-// //               selectedFile.name ||
-// //                 "resume.pdf",
-// //               {
-// //                 type:
-// //                   selectedFile.mimeType ||
-// //                   blob.type ||
-// //                   "application/pdf",
-// //               }
-// //             );
-// //           formData.append(
-// //             "file",
-// //             browserFile
-// //           );
-// //         } else {
-// //           formData.append(
-// //             "file",
-// //             {
-// //               uri:
-// //                 selectedFile.uri,
-// //               name:
-// //                 selectedFile.name ||
-// //                 "resume.pdf",
-// //               type:
-// //                 selectedFile.mimeType ||
-// //                 "application/pdf",
-// //             } as any
-// //           );
-// //         }
-// //         // =================================================
-// //         // SEND TO BACKEND
-// //         // =================================================
-// //         const response =
-// //           await fetch(
-// //             `${API_URL}/api/v1/resume/upload?ts=${Date.now()}`,
-// //             {
-// //               method: "POST",
-// //               headers: {
-// //                 Authorization:
-// //                   `Bearer ${token}`,
-// //               },
-// //               body: formData,
-// //             }
-// //           );
-// //         // =================================================
-// //         // READ RESPONSE
-// //         // =================================================
-// //         let data: any = null;
-// //         try {
-// //           data =
-// //             await response.json();
-// //         } catch {
-// //           throw new Error(
-// //             "Backend returned an invalid response."
-// //           );
-// //         }
-// //         if (!response.ok) {
-// //           throw new Error(
-// //             data?.detail ||
-// //               "Resume upload failed."
-// //           );
-// //         }
-// //         // =================================================
-// //         // FIND ANALYSIS
-// //         // =================================================
-// //         let rawAnalysis =
-// //           data?.analysis;
-// //         if (
-// //           rawAnalysis ===
-// //           undefined
-// //         ) {
-// //           rawAnalysis =
-// //             data?.data?.analysis;
-// //         }
-// //         if (
-// //           rawAnalysis ===
-// //           undefined
-// //         ) {
-// //           rawAnalysis =
-// //             data?.ai_analysis;
-// //         }
-// //         if (
-// //           rawAnalysis ===
-// //           undefined
-// //         ) {
-// //           throw new Error(
-// //             "Resume analysis was not received from the backend."
-// //           );
-// //         }
-// //         // =================================================
-// //         // NORMALIZE ANALYSIS
-// //         // =================================================
-// //         const analysisData =
-// //           normalizeAnalysis(
-// //             rawAnalysis
-// //           );
-// //         // =================================================
-// //         // SAVE NEW ANALYSIS
-// //         // =================================================
-// //         await saveResumeAnalysis(
-// //           analysisData
-// //         );
-// //         // =================================================
-// //         // DISPLAY ONLY NEW ANALYSIS
-// //         // =================================================
-// //         setAnalysis(
-// //           analysisData
-// //         );
-// //         setOpenSection(
-// //           "resume"
-// //         );
-// //       } catch (error: any) {
-// //         console.log(
-// //           "Resume upload error:",
-// //           error
-// //         );
-// //         // IMPORTANT:
-// //         // Never restore the previous resume
-// //         // after upload failure.
-// //         setAnalysis(null);
-// //         setOpenSection(null);
-// //         Alert.alert(
-// //           "Upload Failed",
-// //           error?.message ||
-// //             "Something went wrong while uploading the resume."
-// //         );
-// //       } finally {
-// //         setLoading(false);
-// //       }
-// //     };
-// //   // =======================================================
-// //   // UI
-// //   // =======================================================
-// //   return (
-// //     <ScrollView
-// //       style={styles.container}
-// //       contentContainerStyle={
-// //         styles.contentContainer
-// //       }
-// //       showsVerticalScrollIndicator={
-// //         false
-// //       }
-// //     >
-// //       {/* HEADER */}
-// //       <View style={styles.header}>
-// //         <Text
-// //           style={styles.pageTitle}
-// //         >
-// //           📄 Resume Analyzer
-// //         </Text>
-// //         <Text
-// //           style={styles.pageSubtitle}
-// //         >
-// //           Upload your resume and get
-// //           personalized career
-// //           guidance.
-// //         </Text>
-// //       </View>
-// //       {/* UPLOAD BUTTON */}
-// //       <Pressable
-// //         onPress={uploadResume}
-// //         disabled={
-// //           loading ||
-// //           restoring
-// //         }
-// //         style={({ pressed }) => [
-// //           styles.uploadButton,
-// //           pressed &&
-// //             styles.pressed,
-// //           (loading ||
-// //             restoring) &&
-// //             styles.disabledButton,
-// //         ]}
-// //       >
-// //         {loading ? (
-// //           <View
-// //             style={
-// //               styles.loadingRow
-// //             }
-// //           >
-// //             <ActivityIndicator
-// //               size="small"
-// //               color="#FFFFFF"
-// //             />
-// //             <Text
-// //               style={
-// //                 styles.uploadButtonText
-// //               }
-// //             >
-// //               Analyzing Resume...
-// //             </Text>
-// //           </View>
-// //         ) : restoring ? (
-// //           <View
-// //             style={
-// //               styles.loadingRow
-// //             }
-// //           >
-// //             <ActivityIndicator
-// //               size="small"
-// //               color="#FFFFFF"
-// //             />
-// //             <Text
-// //               style={
-// //                 styles.uploadButtonText
-// //               }
-// //             >
-// //               Loading Saved Resume...
-// //             </Text>
-// //           </View>
-// //         ) : (
-// //           <Text
-// //             style={
-// //               styles.uploadButtonText
-// //             }
-// //           >
-// //             📤 Upload Resume
-// //           </Text>
-// //         )}
-// //       </Pressable>
-// //       {/* SELECTED FILE */}
-// //       {selectedFileName &&
-// //         !loading && (
-// //           <View
-// //             style={
-// //               styles.selectedFileBox
-// //             }
-// //           >
-// //             <Text
-// //               style={
-// //                 styles.selectedFileLabel
-// //               }
-// //             >
-// //               Selected Resume
-// //             </Text>
-// //             <Text
-// //               style={
-// //                 styles.selectedFileName
-// //               }
-// //               numberOfLines={2}
-// //             >
-// //               📎 {selectedFileName}
-// //             </Text>
-// //           </View>
-// //         )}
-// //       {/* ANALYZING MESSAGE */}
-// //       {loading && (
-// //         <View
-// //           style={
-// //             styles.analyzingBox
-// //           }
-// //         >
-// //           <ActivityIndicator
-// //             size="small"
-// //             color="#2563EB"
-// //           />
-// //           <Text
-// //             style={
-// //               styles.analyzingText
-// //             }
-// //           >
-// //             Reading your resume and
-// //             generating personalized
-// //             career analysis...
-// //           </Text>
-// //         </View>
-// //       )}
-// //       {/* RESULTS */}
-// //       {analysis && !loading && (
-// //         <View
-// //           style={
-// //             styles.resultsContainer
-// //           }
-// //         >
-// //           {/* YOUR RESUME */}
-// //           <MainAccordion
-// //             title="📄 Your Resume"
-// //             open={
-// //               openSection ===
-// //               "resume"
-// //             }
-// //             onPress={() =>
-// //               setOpenSection(
-// //                 openSection ===
-// //                   "resume"
-// //                   ? null
-// //                   : "resume"
-// //               )
-// //             }
-// //           >
-// //             <YourResumeSection
-// //               analysis={
-// //                 analysis
-// //               }
-// //             />
-// //           </MainAccordion>
-// //           {/* CAREER ANALYSIS */}
-// //           <MainAccordion
-// //             title="🚀 Career Analysis"
-// //             open={
-// //               openSection ===
-// //               "career"
-// //             }
-// //             onPress={() =>
-// //               setOpenSection(
-// //                 openSection ===
-// //                   "career"
-// //                   ? null
-// //                   : "career"
-// //               )
-// //             }
-// //           >
-// //             <CareerAnalysisSection
-// //               analysis={
-// //                 analysis
-// //               }
-// //             />
-// //           </MainAccordion>
-// //         </View>
-// //       )}
-// //       {/* EMPTY STATE */}
-// //       {!analysis &&
-// //         !loading &&
-// //         !restoring && (
-// //           <View
-// //             style={
-// //               styles.emptyState
-// //             }
-// //           >
-// //             <Text
-// //               style={
-// //                 styles.emptyStateIcon
-// //               }
-// //             >
-// //               📄
-// //             </Text>
-// //             <Text
-// //               style={
-// //                 styles.emptyStateTitle
-// //               }
-// //             >
-// //               No Resume Uploaded
-// //             </Text>
-// //             <Text
-// //               style={
-// //                 styles.emptyStateText
-// //             }
-// //             >
-// //               Upload your PDF or DOCX
-// //               resume to see your
-// //               resume details and
-// //               personalized career
-// //               suggestions.
-// //             </Text>
-// //           </View>
-// //         )}
-// //     </ScrollView>
-// //   );
-// // }
-// // // =========================================================
-// // // STYLES
-// // // =========================================================
-// // const styles =
-// //   StyleSheet.create({
-// //     container: {
-// //       flex: 1,
-// //       backgroundColor:
-// //         "#F6F8FC",
-// //     },
-// //     contentContainer: {
-// //       padding: 20,
-// //       paddingBottom: 60,
-// //     },
-// //     header: {
-// //       marginBottom: 20,
-// //     },
-// //     pageTitle: {
-// //       fontSize: 26,
-// //       fontWeight: "800",
-// //       color: "#172033",
-// //       marginBottom: 7,
-// //     },
-// //     pageSubtitle: {
-// //       fontSize: 14,
-// //       lineHeight: 21,
-// //       color: "#667085",
-// //     },
-// //     uploadButton: {
-// //       backgroundColor:
-// //         "#2563EB",
-// //       borderRadius: 14,
-// //       minHeight: 52,
-// //       alignItems: "center",
-// //       justifyContent:
-// //         "center",
-// //       marginBottom: 12,
-// //     },
-// //     uploadButtonText: {
-// //       color: "#FFFFFF",
-// //       fontSize: 16,
-// //       fontWeight: "700",
-// //     },
-// //     loadingRow: {
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "center",
-// //       gap: 10,
-// //     },
-// //     disabledButton: {
-// //       opacity: 0.7,
-// //     },
-// //     pressed: {
-// //       opacity: 0.75,
-// //     },
-// //     selectedFileBox: {
-// //       backgroundColor:
-// //         "#EEF4FF",
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#C7D7FE",
-// //       borderRadius: 12,
-// //       padding: 12,
-// //       marginBottom: 14,
-// //     },
-// //     selectedFileLabel: {
-// //       fontSize: 11,
-// //       fontWeight: "800",
-// //       color: "#475467",
-// //       marginBottom: 4,
-// //       textTransform:
-// //         "uppercase",
-// //     },
-// //     selectedFileName: {
-// //       fontSize: 13,
-// //       lineHeight: 19,
-// //       color: "#175CD3",
-// //       fontWeight: "600",
-// //     },
-// //     analyzingBox: {
-// //       backgroundColor:
-// //         "#FFFFFF",
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#D0D5DD",
-// //       borderRadius: 12,
-// //       padding: 14,
-// //       marginBottom: 16,
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "center",
-// //       gap: 10,
-// //     },
-// //     analyzingText: {
-// //       flex: 1,
-// //       fontSize: 13,
-// //       lineHeight: 19,
-// //       color: "#475467",
-// //     },
-// //     resultsContainer: {
-// //       gap: 14,
-// //     },
-// //     mainAccordion: {
-// //       backgroundColor:
-// //         "#FFFFFF",
-// //       borderRadius: 16,
-// //       overflow:
-// //         "hidden",
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#E5E7EB",
-// //     },
-// //     mainAccordionHeader: {
-// //       minHeight: 62,
-// //       paddingHorizontal: 18,
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "center",
-// //       justifyContent:
-// //         "space-between",
-// //     },
-// //     mainAccordionTitle: {
-// //       fontSize: 18,
-// //       fontWeight: "800",
-// //       color: "#172033",
-// //       flex: 1,
-// //     },
-// //     arrow: {
-// //       fontSize: 28,
-// //       color: "#475467",
-// //       lineHeight: 30,
-// //       marginLeft: 10,
-// //     },
-// //     mainAccordionBody: {
-// //       paddingHorizontal: 14,
-// //       paddingBottom: 14,
-// //       borderTopWidth: 1,
-// //       borderTopColor:
-// //         "#EEF0F4",
-// //     },
-// //     innerAccordion: {
-// //       backgroundColor:
-// //         "#FFFFFF",
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#E4E7EC",
-// //       borderRadius: 12,
-// //       marginTop: 10,
-// //       overflow:
-// //         "hidden",
-// //     },
-// //     innerAccordionHeader: {
-// //       minHeight: 52,
-// //       paddingHorizontal: 14,
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "center",
-// //       justifyContent:
-// //         "space-between",
-// //     },
-// //     innerAccordionTitle: {
-// //       flex: 1,
-// //       fontSize: 15,
-// //       fontWeight: "700",
-// //       color: "#1D2939",
-// //     },
-// //     smallArrow: {
-// //       fontSize: 24,
-// //       color: "#667085",
-// //       marginLeft: 8,
-// //     },
-// //     innerAccordionBody: {
-// //       padding: 14,
-// //       borderTopWidth: 1,
-// //       borderTopColor:
-// //         "#EEF0F4",
-// //     },
-// //     sectionCard: {
-// //       backgroundColor:
-// //         "#FAFBFD",
-// //       borderRadius: 12,
-// //       padding: 15,
-// //       marginTop: 12,
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#E9ECF2",
-// //     },
-// //     cardTitle: {
-// //       fontSize: 16,
-// //       fontWeight: "800",
-// //       color: "#1D2939",
-// //       marginBottom: 12,
-// //     },
-// //     normalText: {
-// //       fontSize: 14,
-// //       lineHeight: 21,
-// //       color: "#475467",
-// //     },
-// //     emptyText: {
-// //       fontSize: 13,
-// //       lineHeight: 19,
-// //       color: "#98A2B3",
-// //     },
-// //     explanationText: {
-// //       fontSize: 13,
-// //       lineHeight: 20,
-// //       color: "#667085",
-// //       marginBottom: 12,
-// //     },
-// //     bulletRow: {
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "flex-start",
-// //       marginBottom: 8,
-// //     },
-// //     bullet: {
-// //       width: 18,
-// //       fontSize: 16,
-// //       color: "#2563EB",
-// //       fontWeight: "800",
-// //     },
-// //     bulletText: {
-// //       flex: 1,
-// //       fontSize: 14,
-// //       lineHeight: 21,
-// //       color: "#475467",
-// //     },
-// //     skillGroup: {
-// //       marginBottom: 15,
-// //     },
-// //     skillGroupTitle: {
-// //       fontSize: 13,
-// //       fontWeight: "700",
-// //       color: "#667085",
-// //       marginBottom: 8,
-// //     },
-// //     skillTagsContainer: {
-// //       flexDirection:
-// //         "row",
-// //       flexWrap:
-// //         "wrap",
-// //       gap: 8,
-// //     },
-// //     skillTag: {
-// //       backgroundColor:
-// //         "#EEF4FF",
-// //       borderRadius: 20,
-// //       paddingHorizontal: 12,
-// //       paddingVertical: 7,
-// //     },
-// //     skillTagText: {
-// //       color: "#175CD3",
-// //       fontSize: 13,
-// //       fontWeight: "600",
-// //     },
-// //     courseAccordion: {
-// //       backgroundColor:
-// //         "#FFFFFF",
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#E4E7EC",
-// //       borderRadius: 12,
-// //       marginBottom: 10,
-// //       overflow:
-// //         "hidden",
-// //     },
-// //     courseHeader: {
-// //       minHeight: 58,
-// //       paddingHorizontal: 13,
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "center",
-// //     },
-// //     courseNumber: {
-// //       width: 30,
-// //       height: 30,
-// //       borderRadius: 15,
-// //       backgroundColor:
-// //         "#2563EB",
-// //       alignItems:
-// //         "center",
-// //       justifyContent:
-// //         "center",
-// //       marginRight: 10,
-// //     },
-// //     courseNumberText: {
-// //       color: "#FFFFFF",
-// //       fontSize: 13,
-// //       fontWeight: "800",
-// //     },
-// //     courseTitle: {
-// //       flex: 1,
-// //       fontSize: 15,
-// //       fontWeight: "800",
-// //       color: "#172033",
-// //     },
-// //     courseBody: {
-// //       padding: 8,
-// //       paddingTop: 0,
-// //     },
-// //     learnCard: {
-// //       backgroundColor:
-// //         "#F8FAFC",
-// //       borderRadius: 10,
-// //       padding: 8,
-// //     },
-// //     learnHeader: {
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "flex-start",
-// //       padding: 8,
-// //     },
-// //     numberCircle: {
-// //       width: 30,
-// //       height: 30,
-// //       borderRadius: 15,
-// //       backgroundColor:
-// //         "#2563EB",
-// //       alignItems:
-// //         "center",
-// //       justifyContent:
-// //         "center",
-// //       marginRight: 10,
-// //     },
-// //     numberText: {
-// //       color: "#FFFFFF",
-// //       fontWeight: "800",
-// //       fontSize: 13,
-// //     },
-// //     learnTitleArea: {
-// //       flex: 1,
-// //     },
-// //     learnSkill: {
-// //       fontSize: 16,
-// //       fontWeight: "800",
-// //       color: "#172033",
-// //       marginBottom: 4,
-// //     },
-// //     learnSubText: {
-// //       fontSize: 12,
-// //       lineHeight: 18,
-// //       color: "#667085",
-// //     },
-// //     levelDescription: {
-// //       fontSize: 13,
-// //       lineHeight: 20,
-// //       color: "#667085",
-// //       marginBottom: 10,
-// //     },
-// //     goalBox: {
-// //       backgroundColor:
-// //         "#F0FDF4",
-// //       borderRadius: 10,
-// //       padding: 11,
-// //       marginTop: 10,
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#DCFCE7",
-// //     },
-// //     goalLabel: {
-// //       fontSize: 12,
-// //       fontWeight: "800",
-// //       color: "#166534",
-// //       marginBottom: 5,
-// //     },
-// //     goalText: {
-// //       fontSize: 13,
-// //       lineHeight: 19,
-// //       color: "#475467",
-// //     },
-// //     projectAccordion: {
-// //       backgroundColor:
-// //         "#FFFFFF",
-// //       borderRadius: 12,
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#E4E7EC",
-// //       overflow:
-// //         "hidden",
-// //       marginBottom: 10,
-// //     },
-// //     projectHeader: {
-// //       minHeight: 58,
-// //       paddingHorizontal: 13,
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "center",
-// //     },
-// //     projectNumber: {
-// //       width: 30,
-// //       height: 30,
-// //       borderRadius: 15,
-// //       backgroundColor:
-// //         "#7F56D9",
-// //       alignItems:
-// //         "center",
-// //       justifyContent:
-// //         "center",
-// //       marginRight: 10,
-// //     },
-// //     projectNumberText: {
-// //       color: "#FFFFFF",
-// //       fontSize: 13,
-// //       fontWeight: "800",
-// //     },
-// //     projectTitle: {
-// //       flex: 1,
-// //       fontSize: 15,
-// //       fontWeight: "800",
-// //       color: "#172033",
-// //     },
-// //     projectBody: {
-// //       padding: 14,
-// //       borderTopWidth: 1,
-// //       borderTopColor:
-// //         "#EEF0F4",
-// //       backgroundColor:
-// //         "#FAFBFD",
-// //     },
-// //     projectPart: {
-// //       marginBottom: 18,
-// //     },
-// //     projectPartTitle: {
-// //       fontSize: 14,
-// //       fontWeight: "800",
-// //       color: "#344054",
-// //       marginBottom: 9,
-// //     },
-// //     technologyContainer: {
-// //       flexDirection:
-// //         "row",
-// //       flexWrap:
-// //         "wrap",
-// //       gap: 8,
-// //     },
-// //     technologyTag: {
-// //       backgroundColor:
-// //         "#F4EBFF",
-// //       borderRadius: 18,
-// //       paddingHorizontal: 11,
-// //       paddingVertical: 7,
-// //     },
-// //     technologyText: {
-// //       fontSize: 12,
-// //       fontWeight: "700",
-// //       color: "#6941C6",
-// //     },
-// //     stepRow: {
-// //       flexDirection:
-// //         "row",
-// //       alignItems:
-// //         "flex-start",
-// //       marginBottom: 11,
-// //     },
-// //     stepNumber: {
-// //       width: 26,
-// //       height: 26,
-// //       borderRadius: 13,
-// //       backgroundColor:
-// //         "#EEF4FF",
-// //       alignItems:
-// //         "center",
-// //       justifyContent:
-// //         "center",
-// //       marginRight: 10,
-// //     },
-// //     stepNumberText: {
-// //       color: "#175CD3",
-// //       fontSize: 12,
-// //       fontWeight: "800",
-// //     },
-// //     stepText: {
-// //       flex: 1,
-// //       fontSize: 14,
-// //       lineHeight: 20,
-// //       color: "#475467",
-// //       paddingTop: 2,
-// //     },
-// //     emptyState: {
-// //       backgroundColor:
-// //         "#FFFFFF",
-// //       borderRadius: 16,
-// //       padding: 28,
-// //       alignItems:
-// //         "center",
-// //       marginTop: 10,
-// //       borderWidth: 1,
-// //       borderColor:
-// //         "#E5E7EB",
-// //     },
-// //     emptyStateIcon: {
-// //       fontSize: 42,
-// //       marginBottom: 12,
-// //     },
-// //     emptyStateTitle: {
-// //       fontSize: 18,
-// //       fontWeight: "800",
-// //       color: "#172033",
-// //       marginBottom: 8,
-// //     },
-// //     emptyStateText: {
-// //       fontSize: 14,
-// //       lineHeight: 21,
-// //       color: "#667085",
-// //       textAlign:
-// //         "center",
-// //     },
-// //     profileGroupTitle: {
-// //       fontSize: 14,
-// //       fontWeight: "800",
-// //       color: "#334155",
-// //       marginTop: 10,
-// //       marginBottom: 4,
-// //     },
-// //     profileGroupText: {
-// //       fontSize: 14,
-// //       lineHeight: 21,
-// //       color: "#475569",
-// //       marginBottom: 5,
-// //     },
-// //     careerContainer: {
-// //       paddingTop: 2,
-// //     },
-// //   });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import React, {
+//  import React, {
 //   useEffect,
 //   useRef,
 //   useState,
 // } from "react";
-
 // import {
 //   ActivityIndicator,
 //   Alert,
@@ -2915,30 +14,22 @@
 //   Text,
 //   View,
 // } from "react-native";
-
 // import * as DocumentPicker from "expo-document-picker";
-
 // // =========================================================
 // // API
 // // =========================================================
-
-// const API_URL =
-//   "https://ai-career-assistant-5pqr.onrender.com";
-
+// // const API_URL = "http://127.0.0.1:8001";
+// const API_URL = "https://ai-career-assistant-5pqr.onrender.com";
 // // =========================================================
 // // STORAGE
 // // =========================================================
-
 // const SAVED_RESUME_ANALYSIS_KEY =
 //   "saved_resume_analysis_v2";
-
 // const OLD_SAVED_RESUME_ANALYSIS_KEY =
 //   "saved_resume_analysis";
-
 // // =========================================================
 // // TYPES
 // // =========================================================
-
 // type Skills = {
 //   programming_languages: string[];
 //   web_technologies: string[];
@@ -2946,21 +37,18 @@
 //   tools_platforms: string[];
 //   other: string[];
 // };
-
 // type LearnNextItem = {
 //   skill: string;
 //   fresher_topics: string[];
 //   goal: string;
 //   advanced_topics: string[];
 // };
-
 // type ProjectIdea = {
 //   project_name: string;
 //   description: string;
 //   technologies: string[];
 //   actual_output: string[];
 // };
-
 // type CareerAnalysis = {
 //   what_you_already_have: string[];
 //   learn_next: LearnNextItem[];
@@ -2969,7 +57,6 @@
 //   your_next_step: string[];
 //   project_ideas: ProjectIdea[];
 // };
-
 // type ResumeAnalysis = {
 //   summary: string;
 //   education: string[];
@@ -2986,15 +73,11 @@
 //   profile_found?: boolean;
 //   career_analysis: CareerAnalysis;
 // };
-
 // // =========================================================
 // // HELPERS
 // // =========================================================
-
 // function cleanText(value: any): string {
-//   if (value === null || value === undefined) {
-//     return "";
-//   }
+//   if (value === null || value === undefined) return "";
 
 //   if (typeof value === "string") {
 //     return value
@@ -3005,18 +88,12 @@
 //       .trim();
 //   }
 
-//   if (
-//     typeof value === "number" ||
-//     typeof value === "boolean"
-//   ) {
+//   if (typeof value === "number" || typeof value === "boolean") {
 //     return String(value);
 //   }
 
 //   if (Array.isArray(value)) {
-//     return value
-//       .map((item) => cleanText(item))
-//       .filter(Boolean)
-//       .join(", ");
+//     return value.map((item) => cleanText(item)).filter(Boolean).join(", ");
 //   }
 
 //   if (typeof value === "object") {
@@ -3026,62 +103,33 @@
 //       return cleanText(obj.value);
 //     }
 
-//     if (
-//       obj.name !== undefined &&
-//       obj.issuer !== undefined
-//     ) {
+//     if (obj.name !== undefined && obj.issuer !== undefined) {
 //       const name = cleanText(obj.name);
 //       const issuer = cleanText(obj.issuer);
-
-//       return issuer
-//         ? `${name} — ${issuer}`
-//         : name;
+//       return issuer ? `${name} — ${issuer}` : name;
 //     }
 
 //     if (obj.role !== undefined) {
 //       const role = cleanText(obj.role);
 //       const reason = cleanText(obj.reason);
-
-//       return reason
-//         ? `${role} — ${reason}`
-//         : role;
+//       return reason ? `${role} — ${reason}` : role;
 //     }
 
 //     if (obj.title !== undefined) {
 //       const title = cleanText(obj.title);
-//       const description = cleanText(
-//         obj.description
-//       );
-
-//       return description
-//         ? `${title} — ${description}`
-//         : title;
+//       const description = cleanText(obj.description);
+//       return description ? `${title} — ${description}` : title;
 //     }
 
-//     if (
-//       obj.category !== undefined &&
-//       obj.value !== undefined
-//     ) {
-//       return `${cleanText(
-//         obj.category
-//       )}: ${cleanText(obj.value)}`;
+//     if (obj.category !== undefined && obj.value !== undefined) {
+//       return `${cleanText(obj.category)}: ${cleanText(obj.value)}`;
 //     }
 
-//     const preferred = [
-//       "text",
-//       "display",
-//       "label",
-//       "course_name",
-//       "project_name",
-//     ];
-
+//     const preferred = ["text", "display", "label", "course_name", "project_name"];
 //     for (const key of preferred) {
 //       if (obj[key] !== undefined) {
 //         const text = cleanText(obj[key]);
-
-//         if (text) {
-//           return text;
-//         }
+//         if (text) return text;
 //       }
 //     }
 
@@ -3091,27 +139,17 @@
 //   return "";
 // }
 
-// // =========================================================
-// // SAFE ARRAY
-// // =========================================================
-
 // function safeArray(value: any): string[] {
-//   if (!Array.isArray(value)) {
-//     return [];
-//   }
+//   if (!Array.isArray(value)) return [];
 
 //   const result: string[] = [];
 //   const seen = new Set<string>();
 
 //   for (const item of value) {
 //     const text = cleanText(item);
-
-//     if (!text || text === "[object Object]") {
-//       continue;
-//     }
+//     if (!text || text === "[object Object]") continue;
 
 //     const key = text.toLowerCase();
-
 //     if (!seen.has(key)) {
 //       seen.add(key);
 //       result.push(text);
@@ -3121,13 +159,7 @@
 //   return result;
 // }
 
-// // =========================================================
-// // EDUCATION
-// // =========================================================
-
-// function formatEducationRecord(
-//   record: any
-// ): string {
+// function formatEducationRecord(record: any): string {
 //   if (typeof record === "string") {
 //     return cleanText(record);
 //   }
@@ -3136,30 +168,12 @@
 //     return "";
 //   }
 
-//   const degree = cleanText(
-//     record.degree ||
-//       record.qualification
-//   );
-
-//   const specialization = cleanText(
-//     record.specialization
-//   );
-
-//   const college = cleanText(
-//     record.college
-//   );
-
-//   const cgpa = cleanText(
-//     record.cgpa || record.gpa
-//   );
-
-//   const percentage = cleanText(
-//     record.percentage
-//   );
-
-//   const duration = cleanText(
-//     record.duration
-//   );
+//   const degree = cleanText(record.degree || record.qualification);
+//   const specialization = cleanText(record.specialization);
+//   const college = cleanText(record.college);
+//   const cgpa = cleanText(record.cgpa || record.gpa);
+//   const percentage = cleanText(record.percentage);
+//   const duration = cleanText(record.duration);
 
 //   let qualification = degree;
 
@@ -3168,12 +182,8 @@
 //       ? `MBA — ${specialization}`
 //       : "MBA";
 //   } else if (
-//     degree
-//       .toUpperCase()
-//       .replace(/\s/g, "") === "B.SC." ||
-//     degree
-//       .toUpperCase()
-//       .replace(/\s/g, "") === "B.SC"
+//     degree.toUpperCase().replace(/\s/g, "") === "B.SC." ||
+//     degree.toUpperCase().replace(/\s/g, "") === "B.SC"
 //   ) {
 //     qualification = specialization
 //       ? `B.Sc. (${specialization})`
@@ -3184,9 +194,7 @@
 //     qualification,
 //     duration,
 //     cgpa ? `CGPA: ${cgpa}` : "",
-//     percentage
-//       ? `${percentage.replace(/%$/, "")}%`
-//       : "",
+//     percentage ? `${percentage.replace(/%$/, "")}%` : "",
 //   ]
 //     .filter(Boolean)
 //     .join(" | ");
@@ -3198,20 +206,10 @@
 //   return college || details;
 // }
 
-// // =========================================================
-// // NORMALIZE EDUCATION
-// // =========================================================
-
-// function normalizeEducation(
-//   raw: any
-// ): {
-//   education: string[];
-//   details: string[];
-// } {
-//   const direct = safeArray(
-//     raw?.education
-//   );
-
+// function normalizeEducation(raw: any): { education: string[]; details: string[] } {
+//   // Prefer the backend's already-formatted education strings.
+//   // They contain the exact college + degree + year + CGPA.
+//   const direct = safeArray(raw?.education);
 //   if (direct.length > 0) {
 //     return {
 //       education: direct,
@@ -3219,9 +217,7 @@
 //     };
 //   }
 
-//   const source = Array.isArray(
-//     raw?.education_details
-//   )
+//   const source = Array.isArray(raw?.education_details)
 //     ? raw.education_details
 //     : [];
 
@@ -3229,18 +225,10 @@
 //   const seen = new Set<string>();
 
 //   for (const record of source) {
-//     const value =
-//       formatEducationRecord(record);
+//     const value = formatEducationRecord(record);
+//     if (!value) continue;
 
-//     if (!value) {
-//       continue;
-//     }
-
-//     const key = value
-//       .toLowerCase()
-//       .replace(/\s+/g, " ")
-//       .trim();
-
+//     const key = value.toLowerCase().replace(/\s+/g, " ").trim();
 //     if (!seen.has(key)) {
 //       seen.add(key);
 //       formatted.push(value);
@@ -3253,52 +241,21 @@
 //   };
 // }
 
-// // =========================================================
-// // LANGUAGE HELPERS
-// // =========================================================
-
 // const PROGRAMMING_LANGUAGE_NAMES = [
-//   "c",
-//   "c++",
-//   "c#",
-//   "java",
-//   "python",
-//   "javascript",
-//   "typescript",
-//   "kotlin",
-//   "swift",
-//   "php",
-//   "ruby",
-//   "go",
-//   "rust",
-//   "scala",
+//   "c", "c++", "c#", "java", "python", "javascript", "typescript",
+//   "kotlin", "swift", "php", "ruby", "go", "rust", "scala",
 // ];
 
 // const HUMAN_LANGUAGE_NAMES = [
-//   "english",
-//   "telugu",
-//   "hindi",
-//   "kannada",
-//   "tamil",
-//   "malayalam",
-//   "marathi",
-//   "bengali",
-//   "gujarati",
-//   "punjabi",
-//   "urdu",
-//   "odia",
-//   "odisha",
+//   "english", "telugu", "hindi", "kannada", "tamil", "malayalam",
+//   "marathi", "bengali", "gujarati", "punjabi", "urdu", "odia", "odisha",
 // ];
 
-// function normalizeLanguages(
-//   value: any
-// ): string[] {
+// function normalizeLanguages(value: any): string[] {
 //   const rawItems = Array.isArray(value)
 //     ? value
 //     : typeof value === "string"
-//       ? value.split(
-//           /,|;|\||\s+&\s+/
-//         )
+//       ? value.split(/,|;|\||\s+&\s+/)
 //       : [];
 
 //   const result: string[] = [];
@@ -3306,45 +263,18 @@
 
 //   for (const item of rawItems) {
 //     const text = cleanText(item);
-
-//     if (!text) {
-//       continue;
-//     }
+//     if (!text) continue;
 
 //     const lower = text.toLowerCase();
-
-//     if (
-//       PROGRAMMING_LANGUAGE_NAMES.some(
-//         (name) =>
-//           lower === name ||
-//           lower.startsWith(`${name} `)
-//       )
-//     ) {
+//     if (PROGRAMMING_LANGUAGE_NAMES.some((name) => lower === name || lower.startsWith(`${name} `))) {
 //       continue;
 //     }
 
-//     if (
-//       HUMAN_LANGUAGE_NAMES.some(
-//         (name) => lower.includes(name)
-//       )
-//     ) {
-//       const parts = text
-//         .split(/,|;|\||\s+&\s+/)
-//         .map(cleanText)
-//         .filter(Boolean);
-
+//     if (HUMAN_LANGUAGE_NAMES.some((name) => lower.includes(name))) {
+//       const parts = text.split(/,|;|\||\s+&\s+/).map(cleanText).filter(Boolean);
 //       for (const part of parts) {
-//         if (
-//           HUMAN_LANGUAGE_NAMES.some(
-//             (name) =>
-//               part
-//                 .toLowerCase()
-//                 .includes(name)
-//           )
-//         ) {
-//           const key =
-//             part.toLowerCase();
-
+//         if (HUMAN_LANGUAGE_NAMES.some((name) => part.toLowerCase().includes(name))) {
+//           const key = part.toLowerCase();
 //           if (!seen.has(key)) {
 //             seen.add(key);
 //             result.push(part);
@@ -3357,222 +287,93 @@
 //   return result;
 // }
 
-// // =========================================================
-// // PROFILE ITEMS
-// // =========================================================
-
-// function profileItemsFromObject(
-//   profile: any
-// ): string[] {
-//   if (
-//     !profile ||
-//     typeof profile !== "object"
-//   ) {
-//     return [];
-//   }
+// function profileItemsFromObject(profile: any): string[] {
+//   if (!profile || typeof profile !== "object") return [];
 
 //   const result: string[] = [];
-
-//   const addGroup = (
-//     label: string,
-//     value: any
-//   ) => {
-//     const items = Array.isArray(value)
-//       ? safeArray(value)
-//       : [];
-
+//   const addGroup = (label: string, value: any) => {
+//     const items = Array.isArray(value) ? safeArray(value) : [];
 //     for (const item of items) {
-//       result.push(
-//         `${label}: ${item}`
-//       );
+//       result.push(`${label}: ${item}`);
 //     }
 //   };
 
-//   addGroup(
-//     "Education",
-//     profile.education
-//   );
-
-//   addGroup(
-//     "Skill",
-//     profile.skills
-//   );
-
-//   addGroup(
-//     "Project",
-//     profile.projects
-//   );
-
-//   addGroup(
-//     "Certification",
-//     profile.certifications
-//   );
-
-//   addGroup(
-//     "Experience",
-//     profile.internships_experience
-//   );
-
-//   addGroup(
-//     "Language",
-//     profile.languages
-//   );
-
-//   addGroup(
-//     "Achievement",
-//     profile.achievements
-//   );
+//   addGroup("Education", profile.education);
+//   addGroup("Skill", profile.skills);
+//   addGroup("Project", profile.projects);
+//   addGroup("Certification", profile.certifications);
+//   addGroup("Experience", profile.internships_experience);
+//   addGroup("Language", profile.languages);
+//   addGroup("Achievement", profile.achievements);
 
 //   return result;
 // }
 
-// // =========================================================
-// // JOB ROLES
-// // =========================================================
-
-// function normalizeJobRoles(
-//   value: any
-// ): string[] {
-//   if (!Array.isArray(value)) {
-//     return [];
-//   }
-
+// function normalizeJobRoles(value: any): string[] {
+//   if (!Array.isArray(value)) return [];
 //   return value
 //     .map((item) => cleanText(item))
 //     .filter(Boolean);
 // }
 
-// // =========================================================
-// // PROJECT IDEAS
-// // =========================================================
-
-// function normalizeProjectIdeas(
-//   value: any
-// ): ProjectIdea[] {
-//   if (!Array.isArray(value)) {
-//     return [];
-//   }
+// function normalizeProjectIdeas(value: any): ProjectIdea[] {
+//   if (!Array.isArray(value)) return [];
 
 //   return value
 //     .map((item: any) => {
 //       if (typeof item === "string") {
 //         return {
-//           project_name:
-//             cleanText(item),
+//           project_name: cleanText(item),
 //           description: "",
 //           technologies: [],
 //           actual_output: [],
 //         };
 //       }
 
-//       if (
-//         !item ||
-//         typeof item !== "object"
-//       ) {
-//         return null;
-//       }
+//       if (!item || typeof item !== "object") return null;
 
 //       return {
 //         project_name: cleanText(
-//           item.project_name ||
-//             item.title ||
-//             item.name
+//           item.project_name || item.title || item.name
 //         ),
-//         description: cleanText(
-//           item.description
-//         ),
-//         technologies: safeArray(
-//           item.technologies
-//         ),
+//         description: cleanText(item.description),
+//         technologies: safeArray(item.technologies),
 //         actual_output: safeArray(
-//           item.actual_output ||
-//             item.output ||
-//             item.outputs
+//           item.actual_output || item.output || item.outputs
 //         ),
 //       };
 //     })
-//     .filter(
-//       (
-//         item
-//       ): item is ProjectIdea =>
-//         Boolean(item?.project_name)
-//     );
+//     .filter((item): item is ProjectIdea => Boolean(item?.project_name));
 // }
 
-// // =========================================================
-// // FALLBACK PROJECT IDEAS
-// // =========================================================
+// function fallbackProjectIdeas(specialization: string): ProjectIdea[] {
+//   const value = specialization.toLowerCase();
 
-// function fallbackProjectIdeas(
-//   specialization: string
-// ): ProjectIdea[] {
-//   const value =
-//     specialization.toLowerCase();
-
-//   if (
-//     value.includes("finance") &&
-//     value.includes("hr")
-//   ) {
+//   if (value.includes("finance") && value.includes("hr")) {
 //     return [
 //       {
-//         project_name:
-//           "HR & Payroll Analytics Dashboard",
-//         description:
-//           "Analyze employee salary, payroll, attendance and HR metrics.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Payroll dashboard",
-//           "HR KPI charts",
-//           "Employee cost analysis",
-//         ],
+//         project_name: "HR & Payroll Analytics Dashboard",
+//         description: "Analyze employee salary, payroll, attendance and HR metrics.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Payroll dashboard", "HR KPI charts", "Employee cost analysis"],
 //       },
 //       {
-//         project_name:
-//           "Recruitment Cost & Hiring Analytics",
-//         description:
-//           "Track hiring cost, time-to-hire and recruitment performance.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Recruitment KPI dashboard",
-//           "Hiring funnel",
-//           "Cost analysis",
-//         ],
+//         project_name: "Recruitment Cost & Hiring Analytics",
+//         description: "Track hiring cost, time-to-hire and recruitment performance.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Recruitment KPI dashboard", "Hiring funnel", "Cost analysis"],
 //       },
 //       {
-//         project_name:
-//           "Employee Compensation Analysis",
-//         description:
-//           "Compare salaries, departments, benefits and compensation trends.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Salary comparison",
-//           "Department analysis",
-//           "Compensation dashboard",
-//         ],
+//         project_name: "Employee Compensation Analysis",
+//         description: "Compare salaries, departments, benefits and compensation trends.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Salary comparison", "Department analysis", "Compensation dashboard"],
 //       },
 //       {
-//         project_name:
-//           "Finance & HR Management Dashboard",
-//         description:
-//           "Combine department budgets, employee costs and workforce metrics.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Budget dashboard",
-//           "Employee cost metrics",
-//           "Management KPI report",
-//         ],
+//         project_name: "Finance & HR Management Dashboard",
+//         description: "Combine department budgets, employee costs and workforce metrics.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Budget dashboard", "Employee cost metrics", "Management KPI report"],
 //       },
 //     ];
 //   }
@@ -3580,132 +381,57 @@
 //   if (value.includes("finance")) {
 //     return [
 //       {
-//         project_name:
-//           "Personal Expense & Budget Analyzer",
-//         description:
-//           "Track income, expenses, budgets and spending patterns.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Expense dashboard",
-//           "Budget summary",
-//           "Monthly spending charts",
-//         ],
+//         project_name: "Personal Expense & Budget Analyzer",
+//         description: "Track income, expenses, budgets and spending patterns.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Expense dashboard", "Budget summary", "Monthly spending charts"],
 //       },
 //       {
-//         project_name:
-//           "Financial Statement Analysis Dashboard",
-//         description:
-//           "Analyze revenue, expenses, profit and financial ratios.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Financial KPI dashboard",
-//           "Ratio analysis",
-//           "Trend charts",
-//         ],
+//         project_name: "Financial Statement Analysis Dashboard",
+//         description: "Analyze revenue, expenses, profit and financial ratios.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Financial KPI dashboard", "Ratio analysis", "Trend charts"],
 //       },
 //       {
-//         project_name:
-//           "Investment Analysis Dashboard",
-//         description:
-//           "Compare investment returns, risk and performance.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Return comparison",
-//           "Risk analysis",
-//           "Investment dashboard",
-//         ],
+//         project_name: "Investment Analysis Dashboard",
+//         description: "Compare investment returns, risk and performance.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Return comparison", "Risk analysis", "Investment dashboard"],
 //       },
 //       {
-//         project_name:
-//           "Sales & Revenue Analysis",
-//         description:
-//           "Analyze sales performance, revenue trends and product contribution.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Sales dashboard",
-//           "Revenue trends",
-//           "Product analysis",
-//         ],
+//         project_name: "Sales & Revenue Analysis",
+//         description: "Analyze sales performance, revenue trends and product contribution.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Sales dashboard", "Revenue trends", "Product analysis"],
 //       },
 //     ];
 //   }
 
-//   if (
-//     value.includes("hr") ||
-//     value.includes("human resource")
-//   ) {
+//   if (value.includes("hr") || value.includes("human resource")) {
 //     return [
 //       {
-//         project_name:
-//           "Recruitment Analytics Dashboard",
-//         description:
-//           "Analyze applications, interview stages, hiring time and recruitment sources.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Recruitment funnel",
-//           "Time-to-hire report",
-//           "Hiring KPI dashboard",
-//         ],
+//         project_name: "Recruitment Analytics Dashboard",
+//         description: "Analyze applications, interview stages, hiring time and recruitment sources.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Recruitment funnel", "Time-to-hire report", "Hiring KPI dashboard"],
 //       },
 //       {
-//         project_name:
-//           "Employee Management System",
-//         description:
-//           "Maintain employee records, departments and employment information.",
-//         technologies: [
-//           "Python",
-//           "SQL",
-//         ],
-//         actual_output: [
-//           "Employee records",
-//           "Search and update functions",
-//           "Employee report",
-//         ],
+//         project_name: "Employee Management System",
+//         description: "Maintain employee records, departments and employment information.",
+//         technologies: ["Python", "SQL"],
+//         actual_output: ["Employee records", "Search and update functions", "Employee report"],
 //       },
 //       {
-//         project_name:
-//           "Employee Attendance & Leave System",
-//         description:
-//           "Track attendance, leave requests and monthly attendance summaries.",
-//         technologies: [
-//           "Python",
-//           "SQL",
-//         ],
-//         actual_output: [
-//           "Attendance report",
-//           "Leave summary",
-//           "Monthly dashboard",
-//         ],
+//         project_name: "Employee Attendance & Leave System",
+//         description: "Track attendance, leave requests and monthly attendance summaries.",
+//         technologies: ["Python", "SQL"],
+//         actual_output: ["Attendance report", "Leave summary", "Monthly dashboard"],
 //       },
 //       {
-//         project_name:
-//           "Employee Performance Dashboard",
-//         description:
-//           "Track performance ratings, goals and department-level metrics.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Performance KPIs",
-//           "Department comparison",
-//           "Employee performance report",
-//         ],
+//         project_name: "Employee Performance Dashboard",
+//         description: "Track performance ratings, goals and department-level metrics.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Performance KPIs", "Department comparison", "Employee performance report"],
 //       },
 //     ];
 //   }
@@ -3713,126 +439,53 @@
 //   if (value.includes("marketing")) {
 //     return [
 //       {
-//         project_name:
-//           "Sales & Marketing Analytics Dashboard",
-//         description:
-//           "Analyze sales, campaigns, customers and marketing performance.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Campaign KPIs",
-//           "Sales trends",
-//           "Marketing dashboard",
-//         ],
+//         project_name: "Sales & Marketing Analytics Dashboard",
+//         description: "Analyze sales, campaigns, customers and marketing performance.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Campaign KPIs", "Sales trends", "Marketing dashboard"],
 //       },
 //       {
-//         project_name:
-//           "Customer Segmentation System",
-//         description:
-//           "Group customers using purchase and engagement information.",
-//         technologies: [
-//           "Python",
-//           "Excel",
-//         ],
-//         actual_output: [
-//           "Customer segments",
-//           "Segment summary",
-//           "Customer insights",
-//         ],
+//         project_name: "Customer Segmentation System",
+//         description: "Group customers using purchase and engagement information.",
+//         technologies: ["Python", "Excel"],
+//         actual_output: ["Customer segments", "Segment summary", "Customer insights"],
 //       },
 //       {
-//         project_name:
-//           "Marketing Campaign Analyzer",
-//         description:
-//           "Compare campaign reach, engagement and conversion performance.",
-//         technologies: [
-//           "Excel",
-//           "Power BI",
-//         ],
-//         actual_output: [
-//           "Campaign comparison",
-//           "Conversion report",
-//           "Performance dashboard",
-//         ],
+//         project_name: "Marketing Campaign Analyzer",
+//         description: "Compare campaign reach, engagement and conversion performance.",
+//         technologies: ["Excel", "Power BI"],
+//         actual_output: ["Campaign comparison", "Conversion report", "Performance dashboard"],
 //       },
 //     ];
 //   }
 
 //   return [
 //     {
-//       project_name:
-//         "Job & Skill Gap Analyzer",
-//       description:
-//         "Compare a student's resume skills with job requirements and identify missing skills.",
-//       technologies: [
-//         "Python",
-//         "FastAPI",
-//         "React Native",
-//         "PostgreSQL",
-//       ],
-//       actual_output: [
-//         "Skill comparison",
-//         "Missing skills list",
-//         "Learning recommendations",
-//       ],
+//       project_name: "Job & Skill Gap Analyzer",
+//       description: "Compare a student's resume skills with job requirements and identify missing skills.",
+//       technologies: ["Python", "FastAPI", "React Native", "PostgreSQL"],
+//       actual_output: ["Skill comparison", "Missing skills list", "Learning recommendations"],
 //     },
 //     {
-//       project_name:
-//         "Student Placement Preparation App",
-//       description:
-//         "Help students prepare for aptitude, coding, interview and placement activities.",
-//       technologies: [
-//         "Python",
-//         "React Native",
-//         "PostgreSQL",
-//       ],
-//       actual_output: [
-//         "Practice modules",
-//         "Progress tracking",
-//         "Interview preparation",
-//       ],
+//       project_name: "Student Placement Preparation App",
+//       description: "Help students prepare for aptitude, coding, interview and placement activities.",
+//       technologies: ["Python", "React Native", "PostgreSQL"],
+//       actual_output: ["Practice modules", "Progress tracking", "Interview preparation"],
 //     },
 //     {
-//       project_name:
-//         "AI Resume Analyzer",
-//       description:
-//         "Analyze resumes and generate structured career recommendations.",
-//       technologies: [
-//         "Python",
-//         "FastAPI",
-//         "Gemini API",
-//         "React Native",
-//       ],
-//       actual_output: [
-//         "Resume analysis",
-//         "Skill recommendations",
-//         "Career guidance",
-//       ],
+//       project_name: "AI Resume Analyzer",
+//       description: "Analyze resumes and generate structured career recommendations.",
+//       technologies: ["Python", "FastAPI", "Gemini API", "React Native"],
+//       actual_output: ["Resume analysis", "Skill recommendations", "Career guidance"],
 //     },
 //     {
-//       project_name:
-//         "Full Stack Job Portal",
-//       description:
-//         "Create a job portal where users can search, save and apply for jobs.",
-//       technologies: [
-//         "React",
-//         "Node.js",
-//         "PostgreSQL",
-//       ],
-//       actual_output: [
-//         "Job search",
-//         "User accounts",
-//         "Application tracking",
-//       ],
+//       project_name: "Full Stack Job Portal",
+//       description: "Create a job portal where users can search, save and apply for jobs.",
+//       technologies: ["React", "Node.js", "PostgreSQL"],
+//       actual_output: ["Job search", "User accounts", "Application tracking"],
 //     },
 //   ];
 // }
-
-// // =========================================================
-// // EMPTY ANALYSIS
-// // =========================================================
 
 // function createEmptyAnalysis(): ResumeAnalysis {
 //   return {
@@ -3869,82 +522,41 @@
 // // =========================================================
 // // ANALYSIS NORMALIZER
 // // =========================================================
-
-// function normalizeAnalysis(
-//   value: any
-// ): ResumeAnalysis {
+// function normalizeAnalysis(value: any): ResumeAnalysis {
 //   let raw = value;
 
 //   if (typeof raw === "string") {
 //     try {
 //       raw = JSON.parse(raw);
 //     } catch {
-//       throw new Error(
-//         "Backend returned invalid resume analysis."
-//       );
+//       throw new Error("Backend returned invalid resume analysis.");
 //     }
 //   }
 
-//   if (
-//     raw?.analysis &&
-//     typeof raw.analysis === "object"
-//   ) {
+//   if (raw?.analysis && typeof raw.analysis === "object") {
 //     raw = raw.analysis;
 //   }
 
-//   if (
-//     raw?.data?.analysis &&
-//     typeof raw.data.analysis === "object"
-//   ) {
+//   if (raw?.data?.analysis && typeof raw.data.analysis === "object") {
 //     raw = raw.data.analysis;
 //   }
 
-//   const education =
-//     normalizeEducation(raw);
+//   const education = normalizeEducation(raw);
+//   const careerRaw = raw?.career_analysis || {};
 
-//   const careerRaw =
-//     raw?.career_analysis || {};
-
-//   const learnNext: LearnNextItem[] =
-//     Array.isArray(
-//       careerRaw.learn_next
-//     )
-//       ? careerRaw.learn_next
-//           .map((item: any) => ({
-//             skill: cleanText(
-//               item?.skill ||
-//                 item?.course_name ||
-//                 item?.name
-//             ),
-//             fresher_topics:
-//               safeArray(
-//                 item?.fresher_topics
-//               ),
-//             goal: cleanText(
-//               item?.goal
-//             ),
-//             advanced_topics:
-//               safeArray(
-//                 item?.advanced_topics
-//               ),
-//           }))
-//           .filter(
-//             (item: LearnNextItem) =>
-//               Boolean(item.skill)
-//           )
-//       : [];
+//   const learnNext: LearnNextItem[] = Array.isArray(careerRaw.learn_next)
+//     ? careerRaw.learn_next.map((item: any) => ({
+//         skill: cleanText(item?.skill || item?.course_name || item?.name),
+//         fresher_topics: safeArray(item?.fresher_topics),
+//         goal: cleanText(item?.goal),
+//         advanced_topics: safeArray(item?.advanced_topics),
+//       })).filter((item: LearnNextItem) => Boolean(item.skill))
+//     : [];
 
 //   const existingProfile =
-//     safeArray(
-//       careerRaw.what_you_already_have
-//     ).length > 0
-//       ? safeArray(
-//           careerRaw.what_you_already_have
-//         )
-//       : profileItemsFromObject(
-//           careerRaw.current_profile ||
-//             raw?.current_profile
-//         );
+//     safeArray(careerRaw.what_you_already_have).length > 0
+//       ? safeArray(careerRaw.what_you_already_have)
+//       : profileItemsFromObject(careerRaw.current_profile || raw?.current_profile);
 
 //   const jobs = normalizeJobRoles(
 //     careerRaw.jobs_you_can_apply_for ||
@@ -3952,271 +564,118 @@
 //       raw?.jobs_you_can_apply_for
 //   );
 
-//   const improvements =
-//     safeArray(
-//       careerRaw.what_you_should_improve ||
-//         careerRaw.improve
-//     );
-
-//   const nextSteps = safeArray(
-//     careerRaw.your_next_step ||
-//       careerRaw.next_steps ||
-//       raw?.your_next_step
+//   const improvements = safeArray(
+//     careerRaw.what_you_should_improve || careerRaw.improve
 //   );
 
-//   const projectIdeas =
-//     normalizeProjectIdeas(
-//       careerRaw.project_ideas ||
-//         raw?.project_ideas
-//     );
+//   const nextSteps = safeArray(
+//     careerRaw.your_next_step || careerRaw.next_steps || raw?.your_next_step
+//   );
 
-//   const specialization =
-//     cleanText(
-//       raw?.specialization ||
-//         careerRaw.current_profile
-//           ?.specialization ||
-//         ""
-//     );
+//   const projectIdeas = normalizeProjectIdeas(
+//     careerRaw.project_ideas || raw?.project_ideas
+//   );
 
-//   const fallbackJobs =
-//     jobs.length > 0
-//       ? jobs
-//       : specialization
-//             .toLowerCase()
-//             .includes("computer")
-//         ? [
-//             "Software Developer Trainee",
-//             "Frontend Developer Trainee",
-//           ]
-//         : specialization
-//               .toLowerCase()
-//               .includes("finance")
-//           ? [
-//               "Finance Executive / Finance Trainee",
-//               "Financial Analyst Trainee",
-//             ]
-//           : specialization
-//                 .toLowerCase()
-//                 .includes("hr")
-//             ? [
-//                 "HR Executive / HR Trainee",
-//                 "Recruitment / Talent Acquisition Trainee",
-//               ]
-//             : [];
+//   const specialization = cleanText(
+//     raw?.specialization || careerRaw.current_profile?.specialization || ""
+//   );
 
-//   const fallbackImprove =
-//     improvements.length > 0
-//       ? improvements
-//       : [
-//           "Strengthen the skills marked Basic or Beginner through practical projects.",
-//           "Build and document at least one project directly related to your target role.",
-//           "Practice interview questions based on your target job.",
-//         ];
+//   const fallbackJobs = jobs.length > 0
+//     ? jobs
+//     : specialization.toLowerCase().includes("computer")
+//       ? ["Software Developer Trainee", "Frontend Developer Trainee"]
+//       : specialization.toLowerCase().includes("finance")
+//         ? ["Finance Executive / Finance Trainee", "Financial Analyst Trainee"]
+//         : specialization.toLowerCase().includes("hr")
+//           ? ["HR Executive / HR Trainee", "Recruitment / Talent Acquisition Trainee"]
+//           : [];
 
-//   const fallbackNextSteps =
-//     nextSteps.length > 0
-//       ? nextSteps
-//       : [
-//           "Follow the recommended learning path from fresher level.",
-//           "Build one practical project related to your target role.",
-//           "Prepare to explain your resume projects in interviews.",
-//           "Practice role-specific interview questions.",
-//         ];
+//   const fallbackImprove = improvements.length > 0
+//     ? improvements
+//     : [
+//         "Strengthen the skills marked Basic or Beginner through practical projects.",
+//         "Build and document at least one project directly related to your target role.",
+//         "Practice interview questions based on your target job.",
+//       ];
 
-//   const finalProjectIdeas =
-//     projectIdeas.length > 0
-//       ? projectIdeas
-//       : fallbackProjectIdeas(
-//           specialization
-//         );
+//   const fallbackNextSteps = nextSteps.length > 0
+//     ? nextSteps
+//     : [
+//         "Follow the recommended learning path from fresher level.",
+//         "Build one practical project related to your target role.",
+//         "Prepare to explain your resume projects in interviews.",
+//         "Practice role-specific interview questions.",
+//       ];
 
-//   const rawLanguages =
-//     raw?.languages ??
-//     careerRaw.current_profile
-//       ?.languages;
+//   const finalProjectIdeas = projectIdeas.length > 0
+//     ? projectIdeas
+//     : fallbackProjectIdeas(specialization);
 
-//   const languages =
-//     normalizeLanguages(
-//       rawLanguages
-//     );
+//   const rawLanguages = raw?.languages ?? careerRaw.current_profile?.languages;
+//   const languages = normalizeLanguages(rawLanguages);
 
-//   const profileFallback =
-//     existingProfile.length > 0
-//       ? existingProfile
-//       : [
-//           ...education.education.map(
-//             (item) =>
-//               `Education: ${item}`
-//           ),
-
-//           ...safeArray(
-//             raw?.skills
-//               ?.programming_languages
-//           ).map(
-//             (item) =>
-//               `Skill: ${item}`
-//           ),
-
-//           ...safeArray(
-//             raw?.skills
-//               ?.web_technologies
-//           ).map(
-//             (item) =>
-//               `Skill: ${item}`
-//           ),
-
-//           ...safeArray(
-//             raw?.skills?.databases
-//           ).map(
-//             (item) =>
-//               `Skill: ${item}`
-//           ),
-
-//           ...safeArray(
-//             raw?.skills
-//               ?.tools_platforms
-//           ).map(
-//             (item) =>
-//               `Skill: ${item}`
-//           ),
-
-//           ...safeArray(
-//             raw?.projects
-//           ).map(
-//             (item) =>
-//               `Project: ${item}`
-//           ),
-
-//           ...safeArray(
-//             raw?.certifications
-//           ).map(
-//             (item) =>
-//               `Certification: ${item}`
-//           ),
-//         ];
+//   const profileFallback = existingProfile.length > 0
+//     ? existingProfile
+//     : [
+//         ...education.education.map((item) => `Education: ${item}`),
+//         ...safeArray(raw?.skills?.programming_languages).map((item) => `Skill: ${item}`),
+//         ...safeArray(raw?.skills?.web_technologies).map((item) => `Skill: ${item}`),
+//         ...safeArray(raw?.skills?.databases).map((item) => `Skill: ${item}`),
+//         ...safeArray(raw?.skills?.tools_platforms).map((item) => `Skill: ${item}`),
+//         ...safeArray(raw?.projects).map((item) => `Project: ${item}`),
+//         ...safeArray(raw?.certifications).map((item) => `Certification: ${item}`),
+//       ];
 
 //   return {
-//     summary: cleanText(
-//       raw?.summary || ""
-//     ),
-
-//     education:
-//       education.education,
-
-//     education_details:
-//       education.details,
-
+//     summary: cleanText(raw?.summary || ""),
+//     education: education.education,
+//     education_details: education.details,
 //     specialization,
-
 //     skills: {
-//       programming_languages:
-//         safeArray(
-//           raw?.skills
-//             ?.programming_languages
-//         ),
-
-//       web_technologies:
-//         safeArray(
-//           raw?.skills
-//             ?.web_technologies
-//         ),
-
-//       databases: safeArray(
-//         raw?.skills?.databases
-//       ),
-
-//       tools_platforms:
-//         safeArray(
-//           raw?.skills
-//             ?.tools_platforms
-//         ),
-
-//       other: safeArray(
-//         raw?.skills?.other
-//       ),
+//       programming_languages: safeArray(raw?.skills?.programming_languages),
+//       web_technologies: safeArray(raw?.skills?.web_technologies),
+//       databases: safeArray(raw?.skills?.databases),
+//       tools_platforms: safeArray(raw?.skills?.tools_platforms),
+//       other: safeArray(raw?.skills?.other),
 //     },
-
-//     skill_details: safeArray(
-//       raw?.skill_details ||
-//         raw?.skills?.details
-//     ),
-
-//     projects: safeArray(
-//       raw?.projects
-//     ),
-
-//     certifications: safeArray(
-//       raw?.certifications
-//     ),
-
-//     internships_experience:
-//       safeArray(
-//         raw?.internships_experience ||
-//           raw?.experience
-//       ),
-
+//     skill_details: safeArray(raw?.skill_details || raw?.skills?.details),
+//     projects: safeArray(raw?.projects),
+//     certifications: safeArray(raw?.certifications),
+//     internships_experience: safeArray(raw?.internships_experience || raw?.experience),
 //     languages,
-
-//     achievements: safeArray(
-//       raw?.achievements
-//     ),
-
-//     personal_information:
-//       safeArray(
-//         raw?.personal_information
-//       ),
-
-//     profile_found:
-//       Boolean(raw?.profile_found) ||
-//       profileFallback.length > 0,
-
+//     achievements: safeArray(raw?.achievements),
+//     personal_information: safeArray(raw?.personal_information),
+//     profile_found: Boolean(raw?.profile_found) || profileFallback.length > 0,
 //     career_analysis: {
-//       what_you_already_have:
-//         profileFallback,
-
-//       learn_next:
-//         learnNext,
-
-//       jobs_you_can_apply_for:
-//         fallbackJobs,
-
-//       what_you_should_improve:
-//         fallbackImprove,
-
-//       your_next_step:
-//         fallbackNextSteps,
-
-//       project_ideas:
-//         finalProjectIdeas,
+//       what_you_already_have: profileFallback,
+//       learn_next: learnNext,
+//       jobs_you_can_apply_for: fallbackJobs,
+//       what_you_should_improve: fallbackImprove,
+//       your_next_step: fallbackNextSteps,
+//       project_ideas: finalProjectIdeas,
 //     },
 //   };
 // }
-
 // // =========================================================
 // // STORAGE HELPERS
 // // =========================================================
-
 // async function saveResumeAnalysis(
 //   analysis: ResumeAnalysis
 // ) {
 //   try {
 //     const value =
 //       JSON.stringify(analysis);
-
 //     if (Platform.OS === "web") {
 //       window.localStorage.setItem(
 //         SAVED_RESUME_ANALYSIS_KEY,
 //         value
 //       );
-
 //       return;
 //     }
-
 //     const AsyncStorage =
 //       require(
 //         "@react-native-async-storage/async-storage"
 //       ).default;
-
 //     await AsyncStorage.setItem(
 //       SAVED_RESUME_ANALYSIS_KEY,
 //       value
@@ -4228,30 +687,24 @@
 //     );
 //   }
 // }
-
 // // =========================================================
 // // CLEAR OLD STORAGE
 // // =========================================================
-
 // async function clearSavedResumeAnalysis() {
 //   try {
 //     if (Platform.OS === "web") {
 //       window.localStorage.removeItem(
 //         SAVED_RESUME_ANALYSIS_KEY
 //       );
-
 //       window.localStorage.removeItem(
 //         OLD_SAVED_RESUME_ANALYSIS_KEY
 //       );
-
 //       return;
 //     }
-
 //     const AsyncStorage =
 //       require(
 //         "@react-native-async-storage/async-storage"
 //       ).default;
-
 //     await AsyncStorage.multiRemove([
 //       SAVED_RESUME_ANALYSIS_KEY,
 //       OLD_SAVED_RESUME_ANALYSIS_KEY,
@@ -4263,17 +716,14 @@
 //     );
 //   }
 // }
-
 // // =========================================================
 // // LOAD SAVED RESUME
 // // =========================================================
-
 // async function loadResumeAnalysis(): Promise<
 //   ResumeAnalysis | null
 // > {
 //   try {
 //     let savedValue = "";
-
 //     if (Platform.OS === "web") {
 //       savedValue =
 //         window.localStorage.getItem(
@@ -4284,17 +734,14 @@
 //         require(
 //           "@react-native-async-storage/async-storage"
 //         ).default;
-
 //       savedValue =
 //         (await AsyncStorage.getItem(
 //           SAVED_RESUME_ANALYSIS_KEY
 //         )) || "";
 //     }
-
 //     if (!savedValue) {
 //       return null;
 //     }
-
 //     return normalizeAnalysis(
 //       JSON.parse(savedValue)
 //     );
@@ -4303,15 +750,12 @@
 //       "Error loading resume analysis:",
 //       error
 //     );
-
 //     return null;
 //   }
 // }
-
 // // =========================================================
 // // BULLET LIST
 // // =========================================================
-
 // function BulletList({
 //   items,
 //   emptyText = "No information found.",
@@ -4319,9 +763,7 @@
 //   items?: string[];
 //   emptyText?: string;
 // }) {
-//   const safeItems =
-//     safeArray(items);
-
+//   const safeItems = safeArray(items);
 //   if (safeItems.length === 0) {
 //     return (
 //       <Text style={styles.emptyText}>
@@ -4329,7 +771,6 @@
 //       </Text>
 //     );
 //   }
-
 //   return (
 //     <View>
 //       {safeItems.map(
@@ -4341,11 +782,8 @@
 //             <Text style={styles.bullet}>
 //               •
 //             </Text>
-
 //             <Text
-//               style={
-//                 styles.bulletText
-//               }
+//               style={styles.bulletText}
 //             >
 //               {item}
 //             </Text>
@@ -4355,11 +793,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // MAIN ACCORDION
 // // =========================================================
-
 // function MainAccordion({
 //   title,
 //   open,
@@ -4373,9 +809,7 @@
 // }) {
 //   return (
 //     <View
-//       style={
-//         styles.mainAccordion
-//       }
+//       style={styles.mainAccordion}
 //     >
 //       <Pressable
 //         onPress={onPress}
@@ -4392,12 +826,10 @@
 //         >
 //           {title}
 //         </Text>
-
 //         <Text style={styles.arrow}>
 //           {open ? "⌃" : "›"}
 //         </Text>
 //       </Pressable>
-
 //       {open && (
 //         <View
 //           style={
@@ -4410,11 +842,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // INNER ACCORDION
 // // =========================================================
-
 // function InnerAccordion({
 //   title,
 //   open,
@@ -4428,9 +858,7 @@
 // }) {
 //   return (
 //     <View
-//       style={
-//         styles.innerAccordion
-//       }
+//       style={styles.innerAccordion}
 //     >
 //       <Pressable
 //         onPress={onPress}
@@ -4447,7 +875,6 @@
 //         >
 //           {title}
 //         </Text>
-
 //         <Text
 //           style={
 //             styles.smallArrow
@@ -4456,7 +883,6 @@
 //           {open ? "⌃" : "›"}
 //         </Text>
 //       </Pressable>
-
 //       {open && (
 //         <View
 //           style={
@@ -4469,11 +895,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // SECTION CARD
 // // =========================================================
-
 // function SectionCard({
 //   title,
 //   children,
@@ -4483,25 +907,18 @@
 // }) {
 //   return (
 //     <View
-//       style={
-//         styles.sectionCard
-//       }
+//       style={styles.sectionCard}
 //     >
-//       <Text
-//         style={styles.cardTitle}
-//       >
+//       <Text style={styles.cardTitle}>
 //         {title}
 //       </Text>
-
 //       {children}
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // SKILL GROUP
 // // =========================================================
-
 // function SkillGroup({
 //   title,
 //   items,
@@ -4511,15 +928,11 @@
 // }) {
 //   const safeItems =
 //     safeArray(items);
-
 //   if (safeItems.length === 0) {
 //     return null;
 //   }
-
 //   return (
-//     <View
-//       style={styles.skillGroup}
-//     >
+//     <View style={styles.skillGroup}>
 //       <Text
 //         style={
 //           styles.skillGroupTitle
@@ -4527,7 +940,6 @@
 //       >
 //         {title}
 //       </Text>
-
 //       <View
 //         style={
 //           styles.skillTagsContainer
@@ -4537,9 +949,7 @@
 //           (item, index) => (
 //             <View
 //               key={`${item}-${index}`}
-//               style={
-//                 styles.skillTag
-//               }
+//               style={styles.skillTag}
 //             >
 //               <Text
 //                 style={
@@ -4555,11 +965,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // YOUR RESUME
 // // =========================================================
-
 // function YourResumeSection({
 //   analysis,
 // }: {
@@ -4568,7 +976,6 @@
 //   const skills =
 //     analysis.skills ||
 //     createEmptyAnalysis().skills;
-
 //   return (
 //     <View>
 //       <SectionCard
@@ -4576,9 +983,7 @@
 //       >
 //         {analysis.summary ? (
 //           <Text
-//             style={
-//               styles.normalText
-//             }
+//             style={styles.normalText}
 //           >
 //             {cleanText(
 //               analysis.summary
@@ -4586,24 +991,19 @@
 //           </Text>
 //         ) : (
 //           <Text
-//             style={
-//               styles.emptyText
-//             }
+//             style={styles.emptyText}
 //           >
 //             No summary found.
 //           </Text>
 //         )}
 //       </SectionCard>
-
 //       <SectionCard title="🎓 Education">
 //         <BulletList
-//           items={
-//             analysis.education
-//           }
+//           items={analysis.education}
 //           emptyText="No education information found."
 //         />
-//       </SectionCard>
 
+//       </SectionCard>
 //       <SectionCard title="🛠️ Skills">
 //         <SkillGroup
 //           title="Programming Languages"
@@ -4611,33 +1011,28 @@
 //             skills.programming_languages
 //           }
 //         />
-
 //         <SkillGroup
 //           title="Web Technologies"
 //           items={
 //             skills.web_technologies
 //           }
 //         />
-
 //         <SkillGroup
 //           title="Databases"
 //           items={
 //             skills.databases
 //           }
 //         />
-
 //         <SkillGroup
 //           title="Tools & Platforms"
 //           items={
 //             skills.tools_platforms
 //           }
 //         />
-
 //         <SkillGroup
 //           title="Other"
 //           items={skills.other}
 //         />
-
 //         {[
 //           ...skills.programming_languages,
 //           ...skills.web_technologies,
@@ -4646,24 +1041,18 @@
 //           ...skills.other,
 //         ].length === 0 && (
 //           <Text
-//             style={
-//               styles.emptyText
-//             }
+//             style={styles.emptyText}
 //           >
 //             No skills found.
 //           </Text>
 //         )}
 //       </SectionCard>
-
 //       <SectionCard title="🚀 Projects">
 //         <BulletList
-//           items={
-//             analysis.projects
-//           }
+//           items={analysis.projects}
 //           emptyText="No projects found."
 //         />
 //       </SectionCard>
-
 //       <SectionCard
 //         title="📜 Certifications"
 //       >
@@ -4674,7 +1063,6 @@
 //           emptyText="No certifications found."
 //         />
 //       </SectionCard>
-
 //       <SectionCard
 //         title="💼 Internship / Experience"
 //       >
@@ -4685,7 +1073,6 @@
 //           emptyText="No internship or experience found."
 //         />
 //       </SectionCard>
-
 //       {safeArray(
 //         analysis.languages
 //       ).length > 0 && (
@@ -4697,7 +1084,6 @@
 //           />
 //         </SectionCard>
 //       )}
-
 //       {safeArray(
 //         analysis.achievements
 //       ).length > 0 && (
@@ -4712,11 +1098,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // LEARN NEXT CARD
 // // =========================================================
-
 // function LearnNextCard({
 //   item,
 //   index,
@@ -4730,15 +1114,10 @@
 //   ] = useState<
 //     "fresher" | "advanced" | null
 //   >(null);
-
 //   return (
-//     <View
-//       style={styles.learnCard}
-//     >
+//     <View style={styles.learnCard}>
 //       <View
-//         style={
-//           styles.learnHeader
-//         }
+//         style={styles.learnHeader}
 //       >
 //         <View
 //           style={
@@ -4746,14 +1125,11 @@
 //           }
 //         >
 //           <Text
-//             style={
-//               styles.numberText
-//             }
+//             style={styles.numberText}
 //           >
 //             {index + 1}
 //           </Text>
 //         </View>
-
 //         <View
 //           style={
 //             styles.learnTitleArea
@@ -4764,11 +1140,8 @@
 //               styles.learnSkill
 //             }
 //           >
-//             {cleanText(
-//               item.skill
-//             )}
+//             {cleanText(item.skill)}
 //           </Text>
-
 //           <Text
 //             style={
 //               styles.learnSubText
@@ -4779,7 +1152,6 @@
 //           </Text>
 //         </View>
 //       </View>
-
 //       <InnerAccordion
 //         title="🌱 Fresher Level"
 //         open={
@@ -4803,30 +1175,23 @@
 //           Learn these topics for
 //           entry-level software jobs.
 //         </Text>
-
 //         <BulletList
 //           items={
 //             item.fresher_topics
 //           }
 //           emptyText="No fresher-level topics found."
 //         />
-
 //         {item.goal ? (
 //           <View
 //             style={styles.goalBox}
 //           >
 //             <Text
-//               style={
-//                 styles.goalLabel
-//               }
+//               style={styles.goalLabel}
 //             >
 //               🎯 Fresher Goal
 //             </Text>
-
 //             <Text
-//               style={
-//                 styles.goalText
-//               }
+//               style={styles.goalText}
 //             >
 //               {cleanText(
 //                 item.goal
@@ -4835,7 +1200,6 @@
 //           </View>
 //         ) : null}
 //       </InnerAccordion>
-
 //       <InnerAccordion
 //         title="🚀 After Getting a Job — Optional Advanced Topics"
 //         open={
@@ -4861,7 +1225,6 @@
 //           comfortable with fresher-level
 //           skills.
 //         </Text>
-
 //         <BulletList
 //           items={
 //             item.advanced_topics
@@ -4872,11 +1235,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // LEARN NEXT
 // // =========================================================
-
 // function LearnNextSection({
 //   items,
 // }: {
@@ -4888,23 +1249,19 @@
 //   ] = useState<number | null>(
 //     null
 //   );
-
 //   if (
 //     !Array.isArray(items) ||
 //     items.length === 0
 //   ) {
 //     return (
 //       <Text
-//         style={
-//           styles.emptyText
-//         }
+//         style={styles.emptyText}
 //       >
 //         No learning recommendations
 //         found.
 //       </Text>
 //     );
 //   }
-
 //   return (
 //     <View>
 //       <Text
@@ -4918,7 +1275,6 @@
 //         and entry-level job
 //         requirements.
 //       </Text>
-
 //       {items.map(
 //         (item, index) => (
 //           <View
@@ -4956,7 +1312,6 @@
 //                   {index + 1}
 //                 </Text>
 //               </View>
-
 //               <Text
 //                 style={
 //                   styles.courseTitle
@@ -4966,7 +1321,6 @@
 //                   item.skill
 //                 )}
 //               </Text>
-
 //               <Text
 //                 style={
 //                   styles.smallArrow
@@ -4978,7 +1332,6 @@
 //                   : "›"}
 //               </Text>
 //             </Pressable>
-
 //             {openSkill ===
 //               index && (
 //               <View
@@ -4998,11 +1351,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
-// // PROJECT IDEA CARD
+// // PROJECT IDEA
 // // =========================================================
-
 // function ProjectIdeaCard({
 //   project,
 //   index,
@@ -5012,7 +1363,6 @@
 // }) {
 //   const [open, setOpen] =
 //     useState(false);
-
 //   return (
 //     <View
 //       style={
@@ -5042,7 +1392,6 @@
 //             {index + 1}
 //           </Text>
 //         </View>
-
 //         <Text
 //           style={
 //             styles.projectTitle
@@ -5052,7 +1401,6 @@
 //             project.project_name
 //           )}
 //         </Text>
-
 //         <Text
 //           style={
 //             styles.smallArrow
@@ -5061,7 +1409,6 @@
 //           {open ? "⌃" : "›"}
 //         </Text>
 //       </Pressable>
-
 //       {open && (
 //         <View
 //           style={
@@ -5069,9 +1416,7 @@
 //           }
 //         >
 //           <View
-//             style={
-//               styles.projectPart
-//             }
+//             style={styles.projectPart}
 //           >
 //             <Text
 //               style={
@@ -5080,7 +1425,6 @@
 //             >
 //               📝 About the Project
 //             </Text>
-
 //             <Text
 //               style={
 //                 styles.normalText
@@ -5092,11 +1436,8 @@
 //                 "No project description available."}
 //             </Text>
 //           </View>
-
 //           <View
-//             style={
-//               styles.projectPart
-//             }
+//             style={styles.projectPart}
 //           >
 //             <Text
 //               style={
@@ -5105,7 +1446,6 @@
 //             >
 //               🛠️ Technologies Used
 //             </Text>
-
 //             <View
 //               style={
 //                 styles.technologyContainer
@@ -5135,7 +1475,6 @@
 //                 )
 //               )}
 //             </View>
-
 //             {safeArray(
 //               project.technologies
 //             ).length === 0 && (
@@ -5149,11 +1488,8 @@
 //               </Text>
 //             )}
 //           </View>
-
 //           <View
-//             style={
-//               styles.projectPart
-//             }
+//             style={styles.projectPart}
 //           >
 //             <Text
 //               style={
@@ -5162,7 +1498,6 @@
 //             >
 //               🖥️ Actual Output
 //             </Text>
-
 //             <BulletList
 //               items={
 //                 project.actual_output
@@ -5175,11 +1510,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // PROJECT IDEAS
 // // =========================================================
-
 // function ProjectIdeasSection({
 //   projects,
 // }: {
@@ -5191,15 +1524,12 @@
 //   ) {
 //     return (
 //       <Text
-//         style={
-//           styles.emptyText
-//         }
+//         style={styles.emptyText}
 //       >
 //         No project ideas found.
 //       </Text>
 //     );
 //   }
-
 //   return (
 //     <View>
 //       <Text
@@ -5213,7 +1543,6 @@
 //         projects, and fresher-level
 //         software roles.
 //       </Text>
-
 //       {projects.map(
 //         (project, index) => (
 //           <ProjectIdeaCard
@@ -5226,11 +1555,9 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // CAREER ANALYSIS
 // // =========================================================
-
 // function CareerAnalysisSection({
 //   analysis,
 // }: {
@@ -5240,7 +1567,6 @@
 //     analysis.career_analysis ||
 //     createEmptyAnalysis()
 //       .career_analysis;
-
 //   const [
 //     openSection,
 //     setOpenSection,
@@ -5253,7 +1579,6 @@
 //     | "projects"
 //     | null
 //   >(null);
-
 //   const toggleSection = (
 //     section:
 //       | "have"
@@ -5269,7 +1594,6 @@
 //         : section
 //     );
 //   };
-
 //   return (
 //     <View
 //       style={
@@ -5298,108 +1622,61 @@
 //           resume.
 //         </Text>
 
-//         <Text
-//           style={
-//             styles.profileGroupTitle
-//           }
-//         >
+//         <Text style={styles.profileGroupTitle}>
 //           🎓 Education
 //         </Text>
-
 //         <BulletList
-//           items={
-//             analysis.education
-//           }
+//           items={analysis.education}
 //           emptyText="No education information found."
 //         />
 
-//         <Text
-//           style={
-//             styles.profileGroupTitle
-//           }
-//         >
+//         <Text style={styles.profileGroupTitle}>
 //           🛠️ Skills
 //         </Text>
-
-//         <Text
-//           style={
-//             styles.profileGroupText
-//           }
-//         >
+//         <Text style={styles.profileGroupText}>
 //           {[
 //             ...safeArray(
-//               analysis.skills
-//                 ?.programming_languages
+//               analysis.skills?.programming_languages
 //             ),
 //             ...safeArray(
-//               analysis.skills
-//                 ?.web_technologies
+//               analysis.skills?.web_technologies
 //             ),
 //             ...safeArray(
-//               analysis.skills
-//                 ?.databases
+//               analysis.skills?.databases
 //             ),
 //             ...safeArray(
-//               analysis.skills
-//                 ?.tools_platforms
+//               analysis.skills?.tools_platforms
 //             ),
 //             ...safeArray(
 //               analysis.skills?.other
 //             ),
-//           ].join(", ") ||
-//             "No skills found."}
+//           ].join(", ") || "No skills found."}
 //         </Text>
 
-//         <Text
-//           style={
-//             styles.profileGroupTitle
-//           }
-//         >
+//         <Text style={styles.profileGroupTitle}>
 //           🚀 Projects
 //         </Text>
-
 //         <BulletList
-//           items={
-//             analysis.projects
-//           }
+//           items={analysis.projects}
 //           emptyText="No projects found."
 //         />
 
-//         <Text
-//           style={
-//             styles.profileGroupTitle
-//           }
-//         >
+//         <Text style={styles.profileGroupTitle}>
 //           📜 Certifications
 //         </Text>
-
 //         <BulletList
-//           items={
-//             analysis.certifications
-//           }
+//           items={analysis.certifications}
 //           emptyText="No certifications found."
 //         />
 
-//         <Text
-//           style={
-//             styles.profileGroupTitle
-//           }
-//         >
+//         <Text style={styles.profileGroupTitle}>
 //           🌐 Languages
 //         </Text>
-
-//         <Text
-//           style={
-//             styles.profileGroupText
-//           }
-//         >
-//           {safeArray(
-//             analysis.languages
-//           ).join(", ") ||
+//         <Text style={styles.profileGroupText}>
+//           {safeArray(analysis.languages).join(", ") ||
 //             "No languages found."}
 //         </Text>
 //       </InnerAccordion>
-
 //       <InnerAccordion
 //         title="📚 What You Should Learn Next"
 //         open={
@@ -5416,7 +1693,6 @@
 //           }
 //         />
 //       </InnerAccordion>
-
 //       <InnerAccordion
 //         title="🎯 Jobs You Can Apply For"
 //         open={
@@ -5436,7 +1712,6 @@
 //           that match your current
 //           resume.
 //         </Text>
-
 //         <BulletList
 //           items={
 //             career.jobs_you_can_apply_for
@@ -5444,7 +1719,6 @@
 //           emptyText="No suitable roles found."
 //         />
 //       </InnerAccordion>
-
 //       <InnerAccordion
 //         title="🛠️ What You Should Improve"
 //         open={
@@ -5467,7 +1741,6 @@
 //           specifically on your resume
 //           and target software roles.
 //         </Text>
-
 //         <BulletList
 //           items={
 //             career.what_you_should_improve
@@ -5475,7 +1748,6 @@
 //           emptyText="No improvement points found."
 //         />
 //       </InnerAccordion>
-
 //       <InnerAccordion
 //         title="➡️ Your Next Step"
 //         open={
@@ -5509,7 +1781,6 @@
 //                     {index + 1}
 //                   </Text>
 //                 </View>
-
 //                 <Text
 //                   style={
 //                     styles.stepText
@@ -5530,7 +1801,6 @@
 //           </Text>
 //         )}
 //       </InnerAccordion>
-
 //       <InnerAccordion
 //         title="💡 Project Ideas"
 //         open={
@@ -5552,53 +1822,46 @@
 //     </View>
 //   );
 // }
-
 // // =========================================================
 // // MAIN SCREEN
 // // =========================================================
-
 // export default function ResumeScreen() {
 //   const [loading, setLoading] =
 //     useState(false);
-
 //   const [analysis, setAnalysis] =
 //     useState<ResumeAnalysis | null>(
 //       null
 //     );
-
 //   const [
 //     openSection,
 //     setOpenSection,
 //   ] = useState<
 //     "resume" | "career" | null
 //   >(null);
-
 //   const [
 //     restoring,
 //     setRestoring,
 //   ] = useState(true);
-
 //   const [
 //     selectedFileName,
 //     setSelectedFileName,
 //   ] = useState("");
-
+//   const [uploadError, setUploadError] = useState("");
+//   // IMPORTANT:
+//   // Prevent old saved data from coming back
+//   // after a new resume is selected.
 //   const hasUploadedNewResume =
 //     useRef(false);
-
 //   // =======================================================
 //   // RESTORE SAVED RESUME
 //   // =======================================================
-
 //   useEffect(() => {
 //     let mounted = true;
-
 //     const restoreResume =
 //       async () => {
 //         try {
 //           const savedAnalysis =
 //             await loadResumeAnalysis();
-
 //           if (
 //             mounted &&
 //             !hasUploadedNewResume.current &&
@@ -5607,7 +1870,6 @@
 //             setAnalysis(
 //               savedAnalysis
 //             );
-
 //             setOpenSection(
 //               "resume"
 //             );
@@ -5623,18 +1885,14 @@
 //           }
 //         }
 //       };
-
 //     restoreResume();
-
 //     return () => {
 //       mounted = false;
 //     };
 //   }, []);
-
 //   // =======================================================
 //   // UPLOAD RESUME
 //   // =======================================================
-
 //   const uploadResume =
 //     async () => {
 //       try {
@@ -5648,49 +1906,36 @@
 //               copyToCacheDirectory: true,
 //             }
 //           );
-
 //         if (result.canceled) {
 //           return;
 //         }
-
 //         const selectedFile =
 //           result.assets?.[0];
-
 //         if (!selectedFile) {
 //           Alert.alert(
 //             "File Error",
 //             "No file was selected."
 //           );
-
 //           return;
 //         }
-
 //         // =================================================
 //         // NEW FILE SELECTED
+//         // CLEAR OLD RESUME IMMEDIATELY
 //         // =================================================
-
 //         hasUploadedNewResume.current =
 //           true;
-
 //         setAnalysis(null);
-
 //         setOpenSection(null);
-
 //         setSelectedFileName(
 //           selectedFile.name ||
 //             "Selected resume"
 //         );
-
 //         await clearSavedResumeAnalysis();
-
 //         setLoading(true);
-
 //         // =================================================
 //         // GET TOKEN
 //         // =================================================
-
 //         let token = "";
-
 //         if (
 //           Platform.OS === "web"
 //         ) {
@@ -5704,7 +1949,6 @@
 //               require(
 //                 "@react-native-async-storage/async-storage"
 //               ).default;
-
 //             token =
 //               (await AsyncStorage.getItem(
 //                 "access_token"
@@ -5718,25 +1962,19 @@
 //             );
 //           }
 //         }
-
 //         if (!token) {
 //           Alert.alert(
 //             "Login Required",
 //             "Please login first."
 //           );
-
 //           setLoading(false);
-
 //           return;
 //         }
-
 //         // =================================================
 //         // FORMDATA
 //         // =================================================
-
 //         const formData =
 //           new FormData();
-
 //         if (
 //           Platform.OS === "web"
 //         ) {
@@ -5744,7 +1982,6 @@
 //             await fetch(
 //               selectedFile.uri
 //             );
-
 //           if (
 //             !fileResponse.ok
 //           ) {
@@ -5752,15 +1989,11 @@
 //               "Could not read the selected file."
 //             );
 //           }
-
 //           const blob =
 //             await fileResponse.blob();
-
 //           const browserFile =
 //             new File(
-//               [
-//                 blob,
-//               ],
+//               [blob],
 //               selectedFile.name ||
 //                 "resume.pdf",
 //               {
@@ -5770,7 +2003,6 @@
 //                   "application/pdf",
 //               }
 //             );
-
 //           formData.append(
 //             "file",
 //             browserFile
@@ -5781,43 +2013,34 @@
 //             {
 //               uri:
 //                 selectedFile.uri,
-
 //               name:
 //                 selectedFile.name ||
 //                 "resume.pdf",
-
 //               type:
 //                 selectedFile.mimeType ||
 //                 "application/pdf",
 //             } as any
 //           );
 //         }
-
 //         // =================================================
 //         // SEND TO BACKEND
 //         // =================================================
-
 //         const response =
 //           await fetch(
 //             `${API_URL}/api/v1/resume/upload?ts=${Date.now()}`,
 //             {
 //               method: "POST",
-
 //               headers: {
 //                 Authorization:
 //                   `Bearer ${token}`,
 //               },
-
 //               body: formData,
 //             }
 //           );
-
 //         // =================================================
 //         // READ RESPONSE
 //         // =================================================
-
 //         let data: any = null;
-
 //         try {
 //           data =
 //             await response.json();
@@ -5826,21 +2049,17 @@
 //             "Backend returned an invalid response."
 //           );
 //         }
-
 //         if (!response.ok) {
 //           throw new Error(
 //             data?.detail ||
 //               "Resume upload failed."
 //           );
 //         }
-
 //         // =================================================
 //         // FIND ANALYSIS
 //         // =================================================
-
 //         let rawAnalysis =
 //           data?.analysis;
-
 //         if (
 //           rawAnalysis ===
 //           undefined
@@ -5848,7 +2067,6 @@
 //           rawAnalysis =
 //             data?.data?.analysis;
 //         }
-
 //         if (
 //           rawAnalysis ===
 //           undefined
@@ -5856,7 +2074,6 @@
 //           rawAnalysis =
 //             data?.ai_analysis;
 //         }
-
 //         if (
 //           rawAnalysis ===
 //           undefined
@@ -5865,32 +2082,25 @@
 //             "Resume analysis was not received from the backend."
 //           );
 //         }
-
 //         // =================================================
 //         // NORMALIZE ANALYSIS
 //         // =================================================
-
 //         const analysisData =
 //           normalizeAnalysis(
 //             rawAnalysis
 //           );
-
 //         // =================================================
 //         // SAVE NEW ANALYSIS
 //         // =================================================
-
 //         await saveResumeAnalysis(
 //           analysisData
 //         );
-
 //         // =================================================
 //         // DISPLAY ONLY NEW ANALYSIS
 //         // =================================================
-
 //         setAnalysis(
 //           analysisData
 //         );
-
 //         setOpenSection(
 //           "resume"
 //         );
@@ -5899,11 +2109,11 @@
 //           "Resume upload error:",
 //           error
 //         );
-
+//         // IMPORTANT:
+//         // Never restore the previous resume
+//         // after upload failure.
 //         setAnalysis(null);
-
 //         setOpenSection(null);
-
 //         Alert.alert(
 //           "Upload Failed",
 //           error?.message ||
@@ -5913,11 +2123,9 @@
 //         setLoading(false);
 //       }
 //     };
-
 //   // =======================================================
 //   // UI
 //   // =======================================================
-
 //   return (
 //     <ScrollView
 //       style={styles.container}
@@ -5929,31 +2137,21 @@
 //       }
 //     >
 //       {/* HEADER */}
-
-//       <View
-//         style={styles.header}
-//       >
+//       <View style={styles.header}>
 //         <Text
-//           style={
-//             styles.pageTitle
-//           }
+//           style={styles.pageTitle}
 //         >
 //           📄 Resume Analyzer
 //         </Text>
-
 //         <Text
-//           style={
-//             styles.pageSubtitle
-//           }
+//           style={styles.pageSubtitle}
 //         >
 //           Upload your resume and get
 //           personalized career
 //           guidance.
 //         </Text>
 //       </View>
-
 //       {/* UPLOAD BUTTON */}
-
 //       <Pressable
 //         onPress={uploadResume}
 //         disabled={
@@ -5962,10 +2160,8 @@
 //         }
 //         style={({ pressed }) => [
 //           styles.uploadButton,
-
 //           pressed &&
 //             styles.pressed,
-
 //           (loading ||
 //             restoring) &&
 //             styles.disabledButton,
@@ -5981,7 +2177,6 @@
 //               size="small"
 //               color="#FFFFFF"
 //             />
-
 //             <Text
 //               style={
 //                 styles.uploadButtonText
@@ -6000,7 +2195,6 @@
 //               size="small"
 //               color="#FFFFFF"
 //             />
-
 //             <Text
 //               style={
 //                 styles.uploadButtonText
@@ -6019,9 +2213,7 @@
 //           </Text>
 //         )}
 //       </Pressable>
-
 //       {/* SELECTED FILE */}
-
 //       {selectedFileName &&
 //         !loading && (
 //           <View
@@ -6036,7 +2228,6 @@
 //             >
 //               Selected Resume
 //             </Text>
-
 //             <Text
 //               style={
 //                 styles.selectedFileName
@@ -6047,9 +2238,7 @@
 //             </Text>
 //           </View>
 //         )}
-
 //       {/* ANALYZING MESSAGE */}
-
 //       {loading && (
 //         <View
 //           style={
@@ -6060,7 +2249,6 @@
 //             size="small"
 //             color="#2563EB"
 //           />
-
 //           <Text
 //             style={
 //               styles.analyzingText
@@ -6072,9 +2260,7 @@
 //           </Text>
 //         </View>
 //       )}
-
 //       {/* RESULTS */}
-
 //       {analysis && !loading && (
 //         <View
 //           style={
@@ -6082,7 +2268,6 @@
 //           }
 //         >
 //           {/* YOUR RESUME */}
-
 //           <MainAccordion
 //             title="📄 Your Resume"
 //             open={
@@ -6104,9 +2289,7 @@
 //               }
 //             />
 //           </MainAccordion>
-
 //           {/* CAREER ANALYSIS */}
-
 //           <MainAccordion
 //             title="🚀 Career Analysis"
 //             open={
@@ -6130,9 +2313,7 @@
 //           </MainAccordion>
 //         </View>
 //       )}
-
 //       {/* EMPTY STATE */}
-
 //       {!analysis &&
 //         !loading &&
 //         !restoring && (
@@ -6148,7 +2329,6 @@
 //             >
 //               📄
 //             </Text>
-
 //             <Text
 //               style={
 //                 styles.emptyStateTitle
@@ -6156,11 +2336,10 @@
 //             >
 //               No Resume Uploaded
 //             </Text>
-
 //             <Text
 //               style={
 //                 styles.emptyStateText
-//               }
+//             }
 //             >
 //               Upload your PDF or DOCX
 //               resume to see your
@@ -6173,11 +2352,9 @@
 //     </ScrollView>
 //   );
 // }
-
 // // =========================================================
 // // STYLES
 // // =========================================================
-
 // const styles =
 //   StyleSheet.create({
 //     container: {
@@ -6185,29 +2362,24 @@
 //       backgroundColor:
 //         "#F6F8FC",
 //     },
-
 //     contentContainer: {
 //       padding: 20,
 //       paddingBottom: 60,
 //     },
-
 //     header: {
 //       marginBottom: 20,
 //     },
-
 //     pageTitle: {
 //       fontSize: 26,
 //       fontWeight: "800",
 //       color: "#172033",
 //       marginBottom: 7,
 //     },
-
 //     pageSubtitle: {
 //       fontSize: 14,
 //       lineHeight: 21,
 //       color: "#667085",
 //     },
-
 //     uploadButton: {
 //       backgroundColor:
 //         "#2563EB",
@@ -6218,13 +2390,11 @@
 //         "center",
 //       marginBottom: 12,
 //     },
-
 //     uploadButtonText: {
 //       color: "#FFFFFF",
 //       fontSize: 16,
 //       fontWeight: "700",
 //     },
-
 //     loadingRow: {
 //       flexDirection:
 //         "row",
@@ -6232,15 +2402,12 @@
 //         "center",
 //       gap: 10,
 //     },
-
 //     disabledButton: {
 //       opacity: 0.7,
 //     },
-
 //     pressed: {
 //       opacity: 0.75,
 //     },
-
 //     selectedFileBox: {
 //       backgroundColor:
 //         "#EEF4FF",
@@ -6251,7 +2418,6 @@
 //       padding: 12,
 //       marginBottom: 14,
 //     },
-
 //     selectedFileLabel: {
 //       fontSize: 11,
 //       fontWeight: "800",
@@ -6260,14 +2426,12 @@
 //       textTransform:
 //         "uppercase",
 //     },
-
 //     selectedFileName: {
 //       fontSize: 13,
 //       lineHeight: 19,
 //       color: "#175CD3",
 //       fontWeight: "600",
 //     },
-
 //     analyzingBox: {
 //       backgroundColor:
 //         "#FFFFFF",
@@ -6283,18 +2447,15 @@
 //         "center",
 //       gap: 10,
 //     },
-
 //     analyzingText: {
 //       flex: 1,
 //       fontSize: 13,
 //       lineHeight: 19,
 //       color: "#475467",
 //     },
-
 //     resultsContainer: {
 //       gap: 14,
 //     },
-
 //     mainAccordion: {
 //       backgroundColor:
 //         "#FFFFFF",
@@ -6305,7 +2466,6 @@
 //       borderColor:
 //         "#E5E7EB",
 //     },
-
 //     mainAccordionHeader: {
 //       minHeight: 62,
 //       paddingHorizontal: 18,
@@ -6316,21 +2476,18 @@
 //       justifyContent:
 //         "space-between",
 //     },
-
 //     mainAccordionTitle: {
 //       fontSize: 18,
 //       fontWeight: "800",
 //       color: "#172033",
 //       flex: 1,
 //     },
-
 //     arrow: {
 //       fontSize: 28,
 //       color: "#475467",
 //       lineHeight: 30,
 //       marginLeft: 10,
 //     },
-
 //     mainAccordionBody: {
 //       paddingHorizontal: 14,
 //       paddingBottom: 14,
@@ -6338,7 +2495,6 @@
 //       borderTopColor:
 //         "#EEF0F4",
 //     },
-
 //     innerAccordion: {
 //       backgroundColor:
 //         "#FFFFFF",
@@ -6350,7 +2506,6 @@
 //       overflow:
 //         "hidden",
 //     },
-
 //     innerAccordionHeader: {
 //       minHeight: 52,
 //       paddingHorizontal: 14,
@@ -6361,27 +2516,23 @@
 //       justifyContent:
 //         "space-between",
 //     },
-
 //     innerAccordionTitle: {
 //       flex: 1,
 //       fontSize: 15,
 //       fontWeight: "700",
 //       color: "#1D2939",
 //     },
-
 //     smallArrow: {
 //       fontSize: 24,
 //       color: "#667085",
 //       marginLeft: 8,
 //     },
-
 //     innerAccordionBody: {
 //       padding: 14,
 //       borderTopWidth: 1,
 //       borderTopColor:
 //         "#EEF0F4",
 //     },
-
 //     sectionCard: {
 //       backgroundColor:
 //         "#FAFBFD",
@@ -6392,33 +2543,28 @@
 //       borderColor:
 //         "#E9ECF2",
 //     },
-
 //     cardTitle: {
 //       fontSize: 16,
 //       fontWeight: "800",
 //       color: "#1D2939",
 //       marginBottom: 12,
 //     },
-
 //     normalText: {
 //       fontSize: 14,
 //       lineHeight: 21,
 //       color: "#475467",
 //     },
-
 //     emptyText: {
 //       fontSize: 13,
 //       lineHeight: 19,
 //       color: "#98A2B3",
 //     },
-
 //     explanationText: {
 //       fontSize: 13,
 //       lineHeight: 20,
 //       color: "#667085",
 //       marginBottom: 12,
 //     },
-
 //     bulletRow: {
 //       flexDirection:
 //         "row",
@@ -6426,32 +2572,27 @@
 //         "flex-start",
 //       marginBottom: 8,
 //     },
-
 //     bullet: {
 //       width: 18,
 //       fontSize: 16,
 //       color: "#2563EB",
 //       fontWeight: "800",
 //     },
-
 //     bulletText: {
 //       flex: 1,
 //       fontSize: 14,
 //       lineHeight: 21,
 //       color: "#475467",
 //     },
-
 //     skillGroup: {
 //       marginBottom: 15,
 //     },
-
 //     skillGroupTitle: {
 //       fontSize: 13,
 //       fontWeight: "700",
 //       color: "#667085",
 //       marginBottom: 8,
 //     },
-
 //     skillTagsContainer: {
 //       flexDirection:
 //         "row",
@@ -6459,7 +2600,6 @@
 //         "wrap",
 //       gap: 8,
 //     },
-
 //     skillTag: {
 //       backgroundColor:
 //         "#EEF4FF",
@@ -6467,13 +2607,11 @@
 //       paddingHorizontal: 12,
 //       paddingVertical: 7,
 //     },
-
 //     skillTagText: {
 //       color: "#175CD3",
 //       fontSize: 13,
 //       fontWeight: "600",
 //     },
-
 //     courseAccordion: {
 //       backgroundColor:
 //         "#FFFFFF",
@@ -6485,7 +2623,6 @@
 //       overflow:
 //         "hidden",
 //     },
-
 //     courseHeader: {
 //       minHeight: 58,
 //       paddingHorizontal: 13,
@@ -6494,7 +2631,6 @@
 //       alignItems:
 //         "center",
 //     },
-
 //     courseNumber: {
 //       width: 30,
 //       height: 30,
@@ -6507,32 +2643,27 @@
 //         "center",
 //       marginRight: 10,
 //     },
-
 //     courseNumberText: {
 //       color: "#FFFFFF",
 //       fontSize: 13,
 //       fontWeight: "800",
 //     },
-
 //     courseTitle: {
 //       flex: 1,
 //       fontSize: 15,
 //       fontWeight: "800",
 //       color: "#172033",
 //     },
-
 //     courseBody: {
 //       padding: 8,
 //       paddingTop: 0,
 //     },
-
 //     learnCard: {
 //       backgroundColor:
 //         "#F8FAFC",
 //       borderRadius: 10,
 //       padding: 8,
 //     },
-
 //     learnHeader: {
 //       flexDirection:
 //         "row",
@@ -6540,7 +2671,6 @@
 //         "flex-start",
 //       padding: 8,
 //     },
-
 //     numberCircle: {
 //       width: 30,
 //       height: 30,
@@ -6553,37 +2683,31 @@
 //         "center",
 //       marginRight: 10,
 //     },
-
 //     numberText: {
 //       color: "#FFFFFF",
 //       fontWeight: "800",
 //       fontSize: 13,
 //     },
-
 //     learnTitleArea: {
 //       flex: 1,
 //     },
-
 //     learnSkill: {
 //       fontSize: 16,
 //       fontWeight: "800",
 //       color: "#172033",
 //       marginBottom: 4,
 //     },
-
 //     learnSubText: {
 //       fontSize: 12,
 //       lineHeight: 18,
 //       color: "#667085",
 //     },
-
 //     levelDescription: {
 //       fontSize: 13,
 //       lineHeight: 20,
 //       color: "#667085",
 //       marginBottom: 10,
 //     },
-
 //     goalBox: {
 //       backgroundColor:
 //         "#F0FDF4",
@@ -6594,20 +2718,17 @@
 //       borderColor:
 //         "#DCFCE7",
 //     },
-
 //     goalLabel: {
 //       fontSize: 12,
 //       fontWeight: "800",
 //       color: "#166534",
 //       marginBottom: 5,
 //     },
-
 //     goalText: {
 //       fontSize: 13,
 //       lineHeight: 19,
 //       color: "#475467",
 //     },
-
 //     projectAccordion: {
 //       backgroundColor:
 //         "#FFFFFF",
@@ -6619,7 +2740,6 @@
 //         "hidden",
 //       marginBottom: 10,
 //     },
-
 //     projectHeader: {
 //       minHeight: 58,
 //       paddingHorizontal: 13,
@@ -6628,7 +2748,6 @@
 //       alignItems:
 //         "center",
 //     },
-
 //     projectNumber: {
 //       width: 30,
 //       height: 30,
@@ -6641,20 +2760,17 @@
 //         "center",
 //       marginRight: 10,
 //     },
-
 //     projectNumberText: {
 //       color: "#FFFFFF",
 //       fontSize: 13,
 //       fontWeight: "800",
 //     },
-
 //     projectTitle: {
 //       flex: 1,
 //       fontSize: 15,
 //       fontWeight: "800",
 //       color: "#172033",
 //     },
-
 //     projectBody: {
 //       padding: 14,
 //       borderTopWidth: 1,
@@ -6663,18 +2779,15 @@
 //       backgroundColor:
 //         "#FAFBFD",
 //     },
-
 //     projectPart: {
 //       marginBottom: 18,
 //     },
-
 //     projectPartTitle: {
 //       fontSize: 14,
 //       fontWeight: "800",
 //       color: "#344054",
 //       marginBottom: 9,
 //     },
-
 //     technologyContainer: {
 //       flexDirection:
 //         "row",
@@ -6682,7 +2795,6 @@
 //         "wrap",
 //       gap: 8,
 //     },
-
 //     technologyTag: {
 //       backgroundColor:
 //         "#F4EBFF",
@@ -6690,13 +2802,11 @@
 //       paddingHorizontal: 11,
 //       paddingVertical: 7,
 //     },
-
 //     technologyText: {
 //       fontSize: 12,
 //       fontWeight: "700",
 //       color: "#6941C6",
 //     },
-
 //     stepRow: {
 //       flexDirection:
 //         "row",
@@ -6704,7 +2814,6 @@
 //         "flex-start",
 //       marginBottom: 11,
 //     },
-
 //     stepNumber: {
 //       width: 26,
 //       height: 26,
@@ -6717,13 +2826,11 @@
 //         "center",
 //       marginRight: 10,
 //     },
-
 //     stepNumberText: {
 //       color: "#175CD3",
 //       fontSize: 12,
 //       fontWeight: "800",
 //     },
-
 //     stepText: {
 //       flex: 1,
 //       fontSize: 14,
@@ -6731,7 +2838,6 @@
 //       color: "#475467",
 //       paddingTop: 2,
 //     },
-
 //     emptyState: {
 //       backgroundColor:
 //         "#FFFFFF",
@@ -6744,19 +2850,16 @@
 //       borderColor:
 //         "#E5E7EB",
 //     },
-
 //     emptyStateIcon: {
 //       fontSize: 42,
 //       marginBottom: 12,
 //     },
-
 //     emptyStateTitle: {
 //       fontSize: 18,
 //       fontWeight: "800",
 //       color: "#172033",
 //       marginBottom: 8,
 //     },
-
 //     emptyStateText: {
 //       fontSize: 14,
 //       lineHeight: 21,
@@ -6764,7 +2867,6 @@
 //       textAlign:
 //         "center",
 //     },
-
 //     profileGroupTitle: {
 //       fontSize: 14,
 //       fontWeight: "800",
@@ -6772,14 +2874,12 @@
 //       marginTop: 10,
 //       marginBottom: 4,
 //     },
-
 //     profileGroupText: {
 //       fontSize: 14,
 //       lineHeight: 21,
 //       color: "#475569",
 //       marginBottom: 5,
 //     },
-
 //     careerContainer: {
 //       paddingTop: 2,
 //     },
@@ -6789,27 +2889,14 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
- import React, {
+import React, {
   useEffect,
   useRef,
   useState,
 } from "react";
+
 import {
   ActivityIndicator,
-  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -6817,22 +2904,31 @@ import {
   Text,
   View,
 } from "react-native";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
+
 // =========================================================
 // API
 // =========================================================
-// const API_URL = "http://127.0.0.1:8001";
-const API_URL = "https://ai-career-assistant-5pqr.onrender.com";
+
+const API_URL =
+  "https://ai-career-assistant-5pqr.onrender.com";
+
 // =========================================================
 // STORAGE
 // =========================================================
+
 const SAVED_RESUME_ANALYSIS_KEY =
   "saved_resume_analysis_v2";
+
 const OLD_SAVED_RESUME_ANALYSIS_KEY =
   "saved_resume_analysis";
+
 // =========================================================
 // TYPES
 // =========================================================
+
 type Skills = {
   programming_languages: string[];
   web_technologies: string[];
@@ -6840,18 +2936,21 @@ type Skills = {
   tools_platforms: string[];
   other: string[];
 };
+
 type LearnNextItem = {
   skill: string;
   fresher_topics: string[];
   goal: string;
   advanced_topics: string[];
 };
+
 type ProjectIdea = {
   project_name: string;
   description: string;
   technologies: string[];
   actual_output: string[];
 };
+
 type CareerAnalysis = {
   what_you_already_have: string[];
   learn_next: LearnNextItem[];
@@ -6860,6 +2959,7 @@ type CareerAnalysis = {
   your_next_step: string[];
   project_ideas: ProjectIdea[];
 };
+
 type ResumeAnalysis = {
   summary: string;
   education: string[];
@@ -6876,11 +2976,15 @@ type ResumeAnalysis = {
   profile_found?: boolean;
   career_analysis: CareerAnalysis;
 };
+
 // =========================================================
 // HELPERS
 // =========================================================
+
 function cleanText(value: any): string {
-  if (value === null || value === undefined) return "";
+  if (value === null || value === undefined) {
+    return "";
+  }
 
   if (typeof value === "string") {
     return value
@@ -6891,12 +2995,18 @@ function cleanText(value: any): string {
       .trim();
   }
 
-  if (typeof value === "number" || typeof value === "boolean") {
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return String(value);
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => cleanText(item)).filter(Boolean).join(", ");
+    return value
+      .map((item) => cleanText(item))
+      .filter(Boolean)
+      .join(", ");
   }
 
   if (typeof value === "object") {
@@ -6906,33 +3016,62 @@ function cleanText(value: any): string {
       return cleanText(obj.value);
     }
 
-    if (obj.name !== undefined && obj.issuer !== undefined) {
+    if (
+      obj.name !== undefined &&
+      obj.issuer !== undefined
+    ) {
       const name = cleanText(obj.name);
       const issuer = cleanText(obj.issuer);
-      return issuer ? `${name} — ${issuer}` : name;
+
+      return issuer
+        ? `${name} — ${issuer}`
+        : name;
     }
 
     if (obj.role !== undefined) {
       const role = cleanText(obj.role);
       const reason = cleanText(obj.reason);
-      return reason ? `${role} — ${reason}` : role;
+
+      return reason
+        ? `${role} — ${reason}`
+        : role;
     }
 
     if (obj.title !== undefined) {
       const title = cleanText(obj.title);
-      const description = cleanText(obj.description);
-      return description ? `${title} — ${description}` : title;
+      const description = cleanText(
+        obj.description
+      );
+
+      return description
+        ? `${title} — ${description}`
+        : title;
     }
 
-    if (obj.category !== undefined && obj.value !== undefined) {
-      return `${cleanText(obj.category)}: ${cleanText(obj.value)}`;
+    if (
+      obj.category !== undefined &&
+      obj.value !== undefined
+    ) {
+      return `${cleanText(
+        obj.category
+      )}: ${cleanText(obj.value)}`;
     }
 
-    const preferred = ["text", "display", "label", "course_name", "project_name"];
+    const preferred = [
+      "text",
+      "display",
+      "label",
+      "course_name",
+      "project_name",
+    ];
+
     for (const key of preferred) {
       if (obj[key] !== undefined) {
         const text = cleanText(obj[key]);
-        if (text) return text;
+
+        if (text) {
+          return text;
+        }
       }
     }
 
@@ -6943,16 +3082,22 @@ function cleanText(value: any): string {
 }
 
 function safeArray(value: any): string[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
   const result: string[] = [];
   const seen = new Set<string>();
 
   for (const item of value) {
     const text = cleanText(item);
-    if (!text || text === "[object Object]") continue;
+
+    if (!text || text === "[object Object]") {
+      continue;
+    }
 
     const key = text.toLowerCase();
+
     if (!seen.has(key)) {
       seen.add(key);
       result.push(text);
@@ -6962,7 +3107,13 @@ function safeArray(value: any): string[] {
   return result;
 }
 
-function formatEducationRecord(record: any): string {
+// =========================================================
+// EDUCATION
+// =========================================================
+
+function formatEducationRecord(
+  record: any
+): string {
   if (typeof record === "string") {
     return cleanText(record);
   }
@@ -6971,12 +3122,29 @@ function formatEducationRecord(record: any): string {
     return "";
   }
 
-  const degree = cleanText(record.degree || record.qualification);
-  const specialization = cleanText(record.specialization);
-  const college = cleanText(record.college);
-  const cgpa = cleanText(record.cgpa || record.gpa);
-  const percentage = cleanText(record.percentage);
-  const duration = cleanText(record.duration);
+  const degree = cleanText(
+    record.degree || record.qualification
+  );
+
+  const specialization = cleanText(
+    record.specialization
+  );
+
+  const college = cleanText(
+    record.college
+  );
+
+  const cgpa = cleanText(
+    record.cgpa || record.gpa
+  );
+
+  const percentage = cleanText(
+    record.percentage
+  );
+
+  const duration = cleanText(
+    record.duration
+  );
 
   let qualification = degree;
 
@@ -6985,8 +3153,12 @@ function formatEducationRecord(record: any): string {
       ? `MBA — ${specialization}`
       : "MBA";
   } else if (
-    degree.toUpperCase().replace(/\s/g, "") === "B.SC." ||
-    degree.toUpperCase().replace(/\s/g, "") === "B.SC"
+    degree
+      .toUpperCase()
+      .replace(/\s/g, "") === "B.SC." ||
+    degree
+      .toUpperCase()
+      .replace(/\s/g, "") === "B.SC"
   ) {
     qualification = specialization
       ? `B.Sc. (${specialization})`
@@ -6997,7 +3169,9 @@ function formatEducationRecord(record: any): string {
     qualification,
     duration,
     cgpa ? `CGPA: ${cgpa}` : "",
-    percentage ? `${percentage.replace(/%$/, "")}%` : "",
+    percentage
+      ? `${percentage.replace(/%$/, "")}%`
+      : "",
   ]
     .filter(Boolean)
     .join(" | ");
@@ -7009,10 +3183,16 @@ function formatEducationRecord(record: any): string {
   return college || details;
 }
 
-function normalizeEducation(raw: any): { education: string[]; details: string[] } {
-  // Prefer the backend's already-formatted education strings.
-  // They contain the exact college + degree + year + CGPA.
-  const direct = safeArray(raw?.education);
+function normalizeEducation(
+  raw: any
+): {
+  education: string[];
+  details: string[];
+} {
+  const direct = safeArray(
+    raw?.education
+  );
+
   if (direct.length > 0) {
     return {
       education: direct,
@@ -7020,7 +3200,9 @@ function normalizeEducation(raw: any): { education: string[]; details: string[] 
     };
   }
 
-  const source = Array.isArray(raw?.education_details)
+  const source = Array.isArray(
+    raw?.education_details
+  )
     ? raw.education_details
     : [];
 
@@ -7028,10 +3210,18 @@ function normalizeEducation(raw: any): { education: string[]; details: string[] 
   const seen = new Set<string>();
 
   for (const record of source) {
-    const value = formatEducationRecord(record);
-    if (!value) continue;
+    const value =
+      formatEducationRecord(record);
 
-    const key = value.toLowerCase().replace(/\s+/g, " ").trim();
+    if (!value) {
+      continue;
+    }
+
+    const key = value
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+
     if (!seen.has(key)) {
       seen.add(key);
       formatted.push(value);
@@ -7044,21 +3234,52 @@ function normalizeEducation(raw: any): { education: string[]; details: string[] 
   };
 }
 
+// =========================================================
+// LANGUAGES
+// =========================================================
+
 const PROGRAMMING_LANGUAGE_NAMES = [
-  "c", "c++", "c#", "java", "python", "javascript", "typescript",
-  "kotlin", "swift", "php", "ruby", "go", "rust", "scala",
+  "c",
+  "c++",
+  "c#",
+  "java",
+  "python",
+  "javascript",
+  "typescript",
+  "kotlin",
+  "swift",
+  "php",
+  "ruby",
+  "go",
+  "rust",
+  "scala",
 ];
 
 const HUMAN_LANGUAGE_NAMES = [
-  "english", "telugu", "hindi", "kannada", "tamil", "malayalam",
-  "marathi", "bengali", "gujarati", "punjabi", "urdu", "odia", "odisha",
+  "english",
+  "telugu",
+  "hindi",
+  "kannada",
+  "tamil",
+  "malayalam",
+  "marathi",
+  "bengali",
+  "gujarati",
+  "punjabi",
+  "urdu",
+  "odia",
+  "odisha",
 ];
 
-function normalizeLanguages(value: any): string[] {
+function normalizeLanguages(
+  value: any
+): string[] {
   const rawItems = Array.isArray(value)
     ? value
     : typeof value === "string"
-      ? value.split(/,|;|\||\s+&\s+/)
+      ? value.split(
+          /,|;|\||\s+&\s+/
+        )
       : [];
 
   const result: string[] = [];
@@ -7066,18 +3287,46 @@ function normalizeLanguages(value: any): string[] {
 
   for (const item of rawItems) {
     const text = cleanText(item);
-    if (!text) continue;
 
-    const lower = text.toLowerCase();
-    if (PROGRAMMING_LANGUAGE_NAMES.some((name) => lower === name || lower.startsWith(`${name} `))) {
+    if (!text) {
       continue;
     }
 
-    if (HUMAN_LANGUAGE_NAMES.some((name) => lower.includes(name))) {
-      const parts = text.split(/,|;|\||\s+&\s+/).map(cleanText).filter(Boolean);
+    const lower = text.toLowerCase();
+
+    if (
+      PROGRAMMING_LANGUAGE_NAMES.some(
+        (name) =>
+          lower === name ||
+          lower.startsWith(`${name} `)
+      )
+    ) {
+      continue;
+    }
+
+    if (
+      HUMAN_LANGUAGE_NAMES.some(
+        (name) =>
+          lower.includes(name)
+      )
+    ) {
+      const parts = text
+        .split(/,|;|\||\s+&\s+/)
+        .map(cleanText)
+        .filter(Boolean);
+
       for (const part of parts) {
-        if (HUMAN_LANGUAGE_NAMES.some((name) => part.toLowerCase().includes(name))) {
-          const key = part.toLowerCase();
+        if (
+          HUMAN_LANGUAGE_NAMES.some(
+            (name) =>
+              part
+                .toLowerCase()
+                .includes(name)
+          )
+        ) {
+          const key =
+            part.toLowerCase();
+
           if (!seen.has(key)) {
             seen.add(key);
             result.push(part);
@@ -7090,37 +3339,101 @@ function normalizeLanguages(value: any): string[] {
   return result;
 }
 
-function profileItemsFromObject(profile: any): string[] {
-  if (!profile || typeof profile !== "object") return [];
+// =========================================================
+// PROFILE
+// =========================================================
+
+function profileItemsFromObject(
+  profile: any
+): string[] {
+  if (
+    !profile ||
+    typeof profile !== "object"
+  ) {
+    return [];
+  }
 
   const result: string[] = [];
-  const addGroup = (label: string, value: any) => {
-    const items = Array.isArray(value) ? safeArray(value) : [];
+
+  const addGroup = (
+    label: string,
+    value: any
+  ) => {
+    const items = Array.isArray(value)
+      ? safeArray(value)
+      : [];
+
     for (const item of items) {
-      result.push(`${label}: ${item}`);
+      result.push(
+        `${label}: ${item}`
+      );
     }
   };
 
-  addGroup("Education", profile.education);
-  addGroup("Skill", profile.skills);
-  addGroup("Project", profile.projects);
-  addGroup("Certification", profile.certifications);
-  addGroup("Experience", profile.internships_experience);
-  addGroup("Language", profile.languages);
-  addGroup("Achievement", profile.achievements);
+  addGroup(
+    "Education",
+    profile.education
+  );
+
+  addGroup(
+    "Skill",
+    profile.skills
+  );
+
+  addGroup(
+    "Project",
+    profile.projects
+  );
+
+  addGroup(
+    "Certification",
+    profile.certifications
+  );
+
+  addGroup(
+    "Experience",
+    profile.internships_experience
+  );
+
+  addGroup(
+    "Language",
+    profile.languages
+  );
+
+  addGroup(
+    "Achievement",
+    profile.achievements
+  );
 
   return result;
 }
 
-function normalizeJobRoles(value: any): string[] {
-  if (!Array.isArray(value)) return [];
+// =========================================================
+// JOB ROLES
+// =========================================================
+
+function normalizeJobRoles(
+  value: any
+): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
   return value
     .map((item) => cleanText(item))
     .filter(Boolean);
 }
 
-function normalizeProjectIdeas(value: any): ProjectIdea[] {
-  if (!Array.isArray(value)) return [];
+// =========================================================
+// PROJECT IDEAS
+// =========================================================
+
+function normalizeProjectIdeas(
+  value: any
+): ProjectIdea[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
 
   return value
     .map((item: any) => {
@@ -7133,50 +3446,114 @@ function normalizeProjectIdeas(value: any): ProjectIdea[] {
         };
       }
 
-      if (!item || typeof item !== "object") return null;
+      if (
+        !item ||
+        typeof item !== "object"
+      ) {
+        return null;
+      }
 
       return {
         project_name: cleanText(
-          item.project_name || item.title || item.name
+          item.project_name ||
+            item.title ||
+            item.name
         ),
-        description: cleanText(item.description),
-        technologies: safeArray(item.technologies),
+        description: cleanText(
+          item.description
+        ),
+        technologies: safeArray(
+          item.technologies
+        ),
         actual_output: safeArray(
-          item.actual_output || item.output || item.outputs
+          item.actual_output ||
+            item.output ||
+            item.outputs
         ),
       };
     })
-    .filter((item): item is ProjectIdea => Boolean(item?.project_name));
+    .filter(
+      (
+        item
+      ): item is ProjectIdea =>
+        Boolean(item?.project_name)
+    );
 }
 
-function fallbackProjectIdeas(specialization: string): ProjectIdea[] {
-  const value = specialization.toLowerCase();
+// =========================================================
+// FALLBACK PROJECT IDEAS
+// =========================================================
 
-  if (value.includes("finance") && value.includes("hr")) {
+function fallbackProjectIdeas(
+  specialization: string
+): ProjectIdea[] {
+  const value =
+    specialization.toLowerCase();
+
+  if (
+    value.includes("finance") &&
+    value.includes("hr")
+  ) {
     return [
       {
-        project_name: "HR & Payroll Analytics Dashboard",
-        description: "Analyze employee salary, payroll, attendance and HR metrics.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Payroll dashboard", "HR KPI charts", "Employee cost analysis"],
+        project_name:
+          "HR & Payroll Analytics Dashboard",
+        description:
+          "Analyze employee salary, payroll, attendance and HR metrics.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Payroll dashboard",
+          "HR KPI charts",
+          "Employee cost analysis",
+        ],
       },
       {
-        project_name: "Recruitment Cost & Hiring Analytics",
-        description: "Track hiring cost, time-to-hire and recruitment performance.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Recruitment KPI dashboard", "Hiring funnel", "Cost analysis"],
+        project_name:
+          "Recruitment Cost & Hiring Analytics",
+        description:
+          "Track hiring cost, time-to-hire and recruitment performance.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Recruitment KPI dashboard",
+          "Hiring funnel",
+          "Cost analysis",
+        ],
       },
       {
-        project_name: "Employee Compensation Analysis",
-        description: "Compare salaries, departments, benefits and compensation trends.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Salary comparison", "Department analysis", "Compensation dashboard"],
+        project_name:
+          "Employee Compensation Analysis",
+        description:
+          "Compare salaries, departments, benefits and compensation trends.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Salary comparison",
+          "Department analysis",
+          "Compensation dashboard",
+        ],
       },
       {
-        project_name: "Finance & HR Management Dashboard",
-        description: "Combine department budgets, employee costs and workforce metrics.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Budget dashboard", "Employee cost metrics", "Management KPI report"],
+        project_name:
+          "Finance & HR Management Dashboard",
+        description:
+          "Combine department budgets, employee costs and workforce metrics.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Budget dashboard",
+          "Employee cost metrics",
+          "Management KPI report",
+        ],
       },
     ];
   }
@@ -7184,57 +3561,132 @@ function fallbackProjectIdeas(specialization: string): ProjectIdea[] {
   if (value.includes("finance")) {
     return [
       {
-        project_name: "Personal Expense & Budget Analyzer",
-        description: "Track income, expenses, budgets and spending patterns.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Expense dashboard", "Budget summary", "Monthly spending charts"],
+        project_name:
+          "Personal Expense & Budget Analyzer",
+        description:
+          "Track income, expenses, budgets and spending patterns.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Expense dashboard",
+          "Budget summary",
+          "Monthly spending charts",
+        ],
       },
       {
-        project_name: "Financial Statement Analysis Dashboard",
-        description: "Analyze revenue, expenses, profit and financial ratios.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Financial KPI dashboard", "Ratio analysis", "Trend charts"],
+        project_name:
+          "Financial Statement Analysis Dashboard",
+        description:
+          "Analyze revenue, expenses, profit and financial ratios.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Financial KPI dashboard",
+          "Ratio analysis",
+          "Trend charts",
+        ],
       },
       {
-        project_name: "Investment Analysis Dashboard",
-        description: "Compare investment returns, risk and performance.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Return comparison", "Risk analysis", "Investment dashboard"],
+        project_name:
+          "Investment Analysis Dashboard",
+        description:
+          "Compare investment returns, risk and performance.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Return comparison",
+          "Risk analysis",
+          "Investment dashboard",
+        ],
       },
       {
-        project_name: "Sales & Revenue Analysis",
-        description: "Analyze sales performance, revenue trends and product contribution.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Sales dashboard", "Revenue trends", "Product analysis"],
+        project_name:
+          "Sales & Revenue Analysis",
+        description:
+          "Analyze sales performance, revenue trends and product contribution.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Sales dashboard",
+          "Revenue trends",
+          "Product analysis",
+        ],
       },
     ];
   }
 
-  if (value.includes("hr") || value.includes("human resource")) {
+  if (
+    value.includes("hr") ||
+    value.includes("human resource")
+  ) {
     return [
       {
-        project_name: "Recruitment Analytics Dashboard",
-        description: "Analyze applications, interview stages, hiring time and recruitment sources.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Recruitment funnel", "Time-to-hire report", "Hiring KPI dashboard"],
+        project_name:
+          "Recruitment Analytics Dashboard",
+        description:
+          "Analyze applications, interview stages, hiring time and recruitment sources.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Recruitment funnel",
+          "Time-to-hire report",
+          "Hiring KPI dashboard",
+        ],
       },
       {
-        project_name: "Employee Management System",
-        description: "Maintain employee records, departments and employment information.",
-        technologies: ["Python", "SQL"],
-        actual_output: ["Employee records", "Search and update functions", "Employee report"],
+        project_name:
+          "Employee Management System",
+        description:
+          "Maintain employee records, departments and employment information.",
+        technologies: [
+          "Python",
+          "SQL",
+        ],
+        actual_output: [
+          "Employee records",
+          "Search and update functions",
+          "Employee report",
+        ],
       },
       {
-        project_name: "Employee Attendance & Leave System",
-        description: "Track attendance, leave requests and monthly attendance summaries.",
-        technologies: ["Python", "SQL"],
-        actual_output: ["Attendance report", "Leave summary", "Monthly dashboard"],
+        project_name:
+          "Employee Attendance & Leave System",
+        description:
+          "Track attendance, leave requests and monthly attendance summaries.",
+        technologies: [
+          "Python",
+          "SQL",
+        ],
+        actual_output: [
+          "Attendance report",
+          "Leave summary",
+          "Monthly dashboard",
+        ],
       },
       {
-        project_name: "Employee Performance Dashboard",
-        description: "Track performance ratings, goals and department-level metrics.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Performance KPIs", "Department comparison", "Employee performance report"],
+        project_name:
+          "Employee Performance Dashboard",
+        description:
+          "Track performance ratings, goals and department-level metrics.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Performance KPIs",
+          "Department comparison",
+          "Employee performance report",
+        ],
       },
     ];
   }
@@ -7242,53 +3694,126 @@ function fallbackProjectIdeas(specialization: string): ProjectIdea[] {
   if (value.includes("marketing")) {
     return [
       {
-        project_name: "Sales & Marketing Analytics Dashboard",
-        description: "Analyze sales, campaigns, customers and marketing performance.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Campaign KPIs", "Sales trends", "Marketing dashboard"],
+        project_name:
+          "Sales & Marketing Analytics Dashboard",
+        description:
+          "Analyze sales, campaigns, customers and marketing performance.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Campaign KPIs",
+          "Sales trends",
+          "Marketing dashboard",
+        ],
       },
       {
-        project_name: "Customer Segmentation System",
-        description: "Group customers using purchase and engagement information.",
-        technologies: ["Python", "Excel"],
-        actual_output: ["Customer segments", "Segment summary", "Customer insights"],
+        project_name:
+          "Customer Segmentation System",
+        description:
+          "Group customers using purchase and engagement information.",
+        technologies: [
+          "Python",
+          "Excel",
+        ],
+        actual_output: [
+          "Customer segments",
+          "Segment summary",
+          "Customer insights",
+        ],
       },
       {
-        project_name: "Marketing Campaign Analyzer",
-        description: "Compare campaign reach, engagement and conversion performance.",
-        technologies: ["Excel", "Power BI"],
-        actual_output: ["Campaign comparison", "Conversion report", "Performance dashboard"],
+        project_name:
+          "Marketing Campaign Analyzer",
+        description:
+          "Compare campaign reach, engagement and conversion performance.",
+        technologies: [
+          "Excel",
+          "Power BI",
+        ],
+        actual_output: [
+          "Campaign comparison",
+          "Conversion report",
+          "Performance dashboard",
+        ],
       },
     ];
   }
 
   return [
     {
-      project_name: "Job & Skill Gap Analyzer",
-      description: "Compare a student's resume skills with job requirements and identify missing skills.",
-      technologies: ["Python", "FastAPI", "React Native", "PostgreSQL"],
-      actual_output: ["Skill comparison", "Missing skills list", "Learning recommendations"],
+      project_name:
+        "Job & Skill Gap Analyzer",
+      description:
+        "Compare a student's resume skills with job requirements and identify missing skills.",
+      technologies: [
+        "Python",
+        "FastAPI",
+        "React Native",
+        "PostgreSQL",
+      ],
+      actual_output: [
+        "Skill comparison",
+        "Missing skills list",
+        "Learning recommendations",
+      ],
     },
     {
-      project_name: "Student Placement Preparation App",
-      description: "Help students prepare for aptitude, coding, interview and placement activities.",
-      technologies: ["Python", "React Native", "PostgreSQL"],
-      actual_output: ["Practice modules", "Progress tracking", "Interview preparation"],
+      project_name:
+        "Student Placement Preparation App",
+      description:
+        "Help students prepare for aptitude, coding, interview and placement activities.",
+      technologies: [
+        "Python",
+        "React Native",
+        "PostgreSQL",
+      ],
+      actual_output: [
+        "Practice modules",
+        "Progress tracking",
+        "Interview preparation",
+      ],
     },
     {
-      project_name: "AI Resume Analyzer",
-      description: "Analyze resumes and generate structured career recommendations.",
-      technologies: ["Python", "FastAPI", "Gemini API", "React Native"],
-      actual_output: ["Resume analysis", "Skill recommendations", "Career guidance"],
+      project_name:
+        "AI Resume Analyzer",
+      description:
+        "Analyze resumes and generate structured career recommendations.",
+      technologies: [
+        "Python",
+        "FastAPI",
+        "Gemini API",
+        "React Native",
+      ],
+      actual_output: [
+        "Resume analysis",
+        "Skill recommendations",
+        "Career guidance",
+      ],
     },
     {
-      project_name: "Full Stack Job Portal",
-      description: "Create a job portal where users can search, save and apply for jobs.",
-      technologies: ["React", "Node.js", "PostgreSQL"],
-      actual_output: ["Job search", "User accounts", "Application tracking"],
+      project_name:
+        "Full Stack Job Portal",
+      description:
+        "Create a job portal where users can search, save and apply for jobs.",
+      technologies: [
+        "React",
+        "Node.js",
+        "PostgreSQL",
+      ],
+      actual_output: [
+        "Job search",
+        "User accounts",
+        "Application tracking",
+      ],
     },
   ];
 }
+
+// =========================================================
+// EMPTY ANALYSIS
+// =========================================================
 
 function createEmptyAnalysis(): ResumeAnalysis {
   return {
@@ -7323,151 +3848,339 @@ function createEmptyAnalysis(): ResumeAnalysis {
 }
 
 // =========================================================
-// ANALYSIS NORMALIZER
+// NORMALIZE ANALYSIS
 // =========================================================
-function normalizeAnalysis(value: any): ResumeAnalysis {
+
+function normalizeAnalysis(
+  value: any
+): ResumeAnalysis {
   let raw = value;
 
   if (typeof raw === "string") {
     try {
       raw = JSON.parse(raw);
     } catch {
-      throw new Error("Backend returned invalid resume analysis.");
+      throw new Error(
+        "Backend returned invalid resume analysis."
+      );
     }
   }
 
-  if (raw?.analysis && typeof raw.analysis === "object") {
+  if (
+    raw?.analysis &&
+    typeof raw.analysis === "object"
+  ) {
     raw = raw.analysis;
   }
 
-  if (raw?.data?.analysis && typeof raw.data.analysis === "object") {
+  if (
+    raw?.data?.analysis &&
+    typeof raw.data.analysis === "object"
+  ) {
     raw = raw.data.analysis;
   }
 
-  const education = normalizeEducation(raw);
-  const careerRaw = raw?.career_analysis || {};
+  const education =
+    normalizeEducation(raw);
 
-  const learnNext: LearnNextItem[] = Array.isArray(careerRaw.learn_next)
-    ? careerRaw.learn_next.map((item: any) => ({
-        skill: cleanText(item?.skill || item?.course_name || item?.name),
-        fresher_topics: safeArray(item?.fresher_topics),
-        goal: cleanText(item?.goal),
-        advanced_topics: safeArray(item?.advanced_topics),
-      })).filter((item: LearnNextItem) => Boolean(item.skill))
-    : [];
+  const careerRaw =
+    raw?.career_analysis || {};
+
+  const learnNext: LearnNextItem[] =
+    Array.isArray(
+      careerRaw.learn_next
+    )
+      ? careerRaw.learn_next
+          .map((item: any) => ({
+            skill: cleanText(
+              item?.skill ||
+                item?.course_name ||
+                item?.name
+            ),
+            fresher_topics:
+              safeArray(
+                item?.fresher_topics
+              ),
+            goal: cleanText(
+              item?.goal
+            ),
+            advanced_topics:
+              safeArray(
+                item?.advanced_topics
+              ),
+          }))
+          .filter(
+            (
+              item: LearnNextItem
+            ) =>
+              Boolean(item.skill)
+          )
+      : [];
 
   const existingProfile =
-    safeArray(careerRaw.what_you_already_have).length > 0
-      ? safeArray(careerRaw.what_you_already_have)
-      : profileItemsFromObject(careerRaw.current_profile || raw?.current_profile);
+    safeArray(
+      careerRaw.what_you_already_have
+    ).length > 0
+      ? safeArray(
+          careerRaw.what_you_already_have
+        )
+      : profileItemsFromObject(
+          careerRaw.current_profile ||
+            raw?.current_profile
+        );
 
-  const jobs = normalizeJobRoles(
-    careerRaw.jobs_you_can_apply_for ||
-      careerRaw.suitable_roles ||
-      raw?.jobs_you_can_apply_for
-  );
+  const jobs =
+    normalizeJobRoles(
+      careerRaw.jobs_you_can_apply_for ||
+        careerRaw.suitable_roles ||
+        raw?.jobs_you_can_apply_for
+    );
 
-  const improvements = safeArray(
-    careerRaw.what_you_should_improve || careerRaw.improve
-  );
+  const improvements =
+    safeArray(
+      careerRaw.what_you_should_improve ||
+        careerRaw.improve
+    );
 
-  const nextSteps = safeArray(
-    careerRaw.your_next_step || careerRaw.next_steps || raw?.your_next_step
-  );
+  const nextSteps =
+    safeArray(
+      careerRaw.your_next_step ||
+        careerRaw.next_steps ||
+        raw?.your_next_step
+    );
 
-  const projectIdeas = normalizeProjectIdeas(
-    careerRaw.project_ideas || raw?.project_ideas
-  );
+  const projectIdeas =
+    normalizeProjectIdeas(
+      careerRaw.project_ideas ||
+        raw?.project_ideas
+    );
 
-  const specialization = cleanText(
-    raw?.specialization || careerRaw.current_profile?.specialization || ""
-  );
+  const specialization =
+    cleanText(
+      raw?.specialization ||
+        careerRaw.current_profile
+          ?.specialization ||
+        ""
+    );
 
-  const fallbackJobs = jobs.length > 0
-    ? jobs
-    : specialization.toLowerCase().includes("computer")
-      ? ["Software Developer Trainee", "Frontend Developer Trainee"]
-      : specialization.toLowerCase().includes("finance")
-        ? ["Finance Executive / Finance Trainee", "Financial Analyst Trainee"]
-        : specialization.toLowerCase().includes("hr")
-          ? ["HR Executive / HR Trainee", "Recruitment / Talent Acquisition Trainee"]
-          : [];
+  const fallbackJobs =
+    jobs.length > 0
+      ? jobs
+      : specialization
+          .toLowerCase()
+          .includes("computer")
+        ? [
+            "Software Developer Trainee",
+            "Frontend Developer Trainee",
+          ]
+        : specialization
+              .toLowerCase()
+              .includes("finance")
+          ? [
+              "Finance Executive / Finance Trainee",
+              "Financial Analyst Trainee",
+            ]
+          : specialization
+                .toLowerCase()
+                .includes("hr")
+            ? [
+                "HR Executive / HR Trainee",
+                "Recruitment / Talent Acquisition Trainee",
+              ]
+            : [];
 
-  const fallbackImprove = improvements.length > 0
-    ? improvements
-    : [
-        "Strengthen the skills marked Basic or Beginner through practical projects.",
-        "Build and document at least one project directly related to your target role.",
-        "Practice interview questions based on your target job.",
-      ];
+  const fallbackImprove =
+    improvements.length > 0
+      ? improvements
+      : [
+          "Strengthen the skills marked Basic or Beginner through practical projects.",
+          "Build and document at least one project directly related to your target role.",
+          "Practice interview questions based on your target job.",
+        ];
 
-  const fallbackNextSteps = nextSteps.length > 0
-    ? nextSteps
-    : [
-        "Follow the recommended learning path from fresher level.",
-        "Build one practical project related to your target role.",
-        "Prepare to explain your resume projects in interviews.",
-        "Practice role-specific interview questions.",
-      ];
+  const fallbackNextSteps =
+    nextSteps.length > 0
+      ? nextSteps
+      : [
+          "Follow the recommended learning path from fresher level.",
+          "Build one practical project related to your target role.",
+          "Prepare to explain your resume projects in interviews.",
+          "Practice role-specific interview questions.",
+        ];
 
-  const finalProjectIdeas = projectIdeas.length > 0
-    ? projectIdeas
-    : fallbackProjectIdeas(specialization);
+  const finalProjectIdeas =
+    projectIdeas.length > 0
+      ? projectIdeas
+      : fallbackProjectIdeas(
+          specialization
+        );
 
-  const rawLanguages = raw?.languages ?? careerRaw.current_profile?.languages;
-  const languages = normalizeLanguages(rawLanguages);
+  const rawLanguages =
+    raw?.languages ??
+    careerRaw.current_profile
+      ?.languages;
 
-  const profileFallback = existingProfile.length > 0
-    ? existingProfile
-    : [
-        ...education.education.map((item) => `Education: ${item}`),
-        ...safeArray(raw?.skills?.programming_languages).map((item) => `Skill: ${item}`),
-        ...safeArray(raw?.skills?.web_technologies).map((item) => `Skill: ${item}`),
-        ...safeArray(raw?.skills?.databases).map((item) => `Skill: ${item}`),
-        ...safeArray(raw?.skills?.tools_platforms).map((item) => `Skill: ${item}`),
-        ...safeArray(raw?.projects).map((item) => `Project: ${item}`),
-        ...safeArray(raw?.certifications).map((item) => `Certification: ${item}`),
-      ];
+  const languages =
+    normalizeLanguages(
+      rawLanguages
+    );
+
+  const profileFallback =
+    existingProfile.length > 0
+      ? existingProfile
+      : [
+          ...education.education.map(
+            (item) =>
+              `Education: ${item}`
+          ),
+          ...safeArray(
+            raw?.skills
+              ?.programming_languages
+          ).map(
+            (item) =>
+              `Skill: ${item}`
+          ),
+          ...safeArray(
+            raw?.skills
+              ?.web_technologies
+          ).map(
+            (item) =>
+              `Skill: ${item}`
+          ),
+          ...safeArray(
+            raw?.skills?.databases
+          ).map(
+            (item) =>
+              `Skill: ${item}`
+          ),
+          ...safeArray(
+            raw?.skills
+              ?.tools_platforms
+          ).map(
+            (item) =>
+              `Skill: ${item}`
+          ),
+          ...safeArray(
+            raw?.projects
+          ).map(
+            (item) =>
+              `Project: ${item}`
+          ),
+          ...safeArray(
+            raw?.certifications
+          ).map(
+            (item) =>
+              `Certification: ${item}`
+          ),
+        ];
 
   return {
-    summary: cleanText(raw?.summary || ""),
-    education: education.education,
-    education_details: education.details,
+    summary: cleanText(
+      raw?.summary || ""
+    ),
+
+    education:
+      education.education,
+
+    education_details:
+      education.details,
+
     specialization,
+
     skills: {
-      programming_languages: safeArray(raw?.skills?.programming_languages),
-      web_technologies: safeArray(raw?.skills?.web_technologies),
-      databases: safeArray(raw?.skills?.databases),
-      tools_platforms: safeArray(raw?.skills?.tools_platforms),
-      other: safeArray(raw?.skills?.other),
+      programming_languages:
+        safeArray(
+          raw?.skills
+            ?.programming_languages
+        ),
+
+      web_technologies:
+        safeArray(
+          raw?.skills
+            ?.web_technologies
+        ),
+
+      databases: safeArray(
+        raw?.skills?.databases
+      ),
+
+      tools_platforms:
+        safeArray(
+          raw?.skills
+            ?.tools_platforms
+        ),
+
+      other: safeArray(
+        raw?.skills?.other
+      ),
     },
-    skill_details: safeArray(raw?.skill_details || raw?.skills?.details),
-    projects: safeArray(raw?.projects),
-    certifications: safeArray(raw?.certifications),
-    internships_experience: safeArray(raw?.internships_experience || raw?.experience),
+
+    skill_details: safeArray(
+      raw?.skill_details ||
+        raw?.skills?.details
+    ),
+
+    projects: safeArray(
+      raw?.projects
+    ),
+
+    certifications: safeArray(
+      raw?.certifications
+    ),
+
+    internships_experience:
+      safeArray(
+        raw?.internships_experience ||
+          raw?.experience
+      ),
+
     languages,
-    achievements: safeArray(raw?.achievements),
-    personal_information: safeArray(raw?.personal_information),
-    profile_found: Boolean(raw?.profile_found) || profileFallback.length > 0,
+
+    achievements: safeArray(
+      raw?.achievements
+    ),
+
+    personal_information:
+      safeArray(
+        raw?.personal_information
+      ),
+
+    profile_found:
+      Boolean(raw?.profile_found) ||
+      profileFallback.length > 0,
+
     career_analysis: {
-      what_you_already_have: profileFallback,
+      what_you_already_have:
+        profileFallback,
+
       learn_next: learnNext,
-      jobs_you_can_apply_for: fallbackJobs,
-      what_you_should_improve: fallbackImprove,
-      your_next_step: fallbackNextSteps,
-      project_ideas: finalProjectIdeas,
+
+      jobs_you_can_apply_for:
+        fallbackJobs,
+
+      what_you_should_improve:
+        fallbackImprove,
+
+      your_next_step:
+        fallbackNextSteps,
+
+      project_ideas:
+        finalProjectIdeas,
     },
   };
 }
+
 // =========================================================
-// STORAGE HELPERS
+// STORAGE
 // =========================================================
+
 async function saveResumeAnalysis(
   analysis: ResumeAnalysis
 ) {
   try {
     const value =
       JSON.stringify(analysis);
+
     if (Platform.OS === "web") {
       window.localStorage.setItem(
         SAVED_RESUME_ANALYSIS_KEY,
@@ -7475,10 +4188,7 @@ async function saveResumeAnalysis(
       );
       return;
     }
-    const AsyncStorage =
-      require(
-        "@react-native-async-storage/async-storage"
-      ).default;
+
     await AsyncStorage.setItem(
       SAVED_RESUME_ANALYSIS_KEY,
       value
@@ -7490,24 +4200,21 @@ async function saveResumeAnalysis(
     );
   }
 }
-// =========================================================
-// CLEAR OLD STORAGE
-// =========================================================
+
 async function clearSavedResumeAnalysis() {
   try {
     if (Platform.OS === "web") {
       window.localStorage.removeItem(
         SAVED_RESUME_ANALYSIS_KEY
       );
+
       window.localStorage.removeItem(
         OLD_SAVED_RESUME_ANALYSIS_KEY
       );
+
       return;
     }
-    const AsyncStorage =
-      require(
-        "@react-native-async-storage/async-storage"
-      ).default;
+
     await AsyncStorage.multiRemove([
       SAVED_RESUME_ANALYSIS_KEY,
       OLD_SAVED_RESUME_ANALYSIS_KEY,
@@ -7519,32 +4226,29 @@ async function clearSavedResumeAnalysis() {
     );
   }
 }
-// =========================================================
-// LOAD SAVED RESUME
-// =========================================================
+
 async function loadResumeAnalysis(): Promise<
   ResumeAnalysis | null
 > {
   try {
     let savedValue = "";
+
     if (Platform.OS === "web") {
       savedValue =
         window.localStorage.getItem(
           SAVED_RESUME_ANALYSIS_KEY
         ) || "";
     } else {
-      const AsyncStorage =
-        require(
-          "@react-native-async-storage/async-storage"
-        ).default;
       savedValue =
         (await AsyncStorage.getItem(
           SAVED_RESUME_ANALYSIS_KEY
         )) || "";
     }
+
     if (!savedValue) {
       return null;
     }
+
     return normalizeAnalysis(
       JSON.parse(savedValue)
     );
@@ -7553,12 +4257,15 @@ async function loadResumeAnalysis(): Promise<
       "Error loading resume analysis:",
       error
     );
+
     return null;
   }
 }
+
 // =========================================================
 // BULLET LIST
 // =========================================================
+
 function BulletList({
   items,
   emptyText = "No information found.",
@@ -7566,7 +4273,9 @@ function BulletList({
   items?: string[];
   emptyText?: string;
 }) {
-  const safeItems = safeArray(items);
+  const safeItems =
+    safeArray(items);
+
   if (safeItems.length === 0) {
     return (
       <Text style={styles.emptyText}>
@@ -7574,19 +4283,27 @@ function BulletList({
       </Text>
     );
   }
+
   return (
     <View>
       {safeItems.map(
         (item, index) => (
           <View
             key={`${item}-${index}`}
-            style={styles.bulletRow}
+            style={
+              styles.bulletRow
+            }
           >
-            <Text style={styles.bullet}>
+            <Text
+              style={styles.bullet}
+            >
               •
             </Text>
+
             <Text
-              style={styles.bulletText}
+              style={
+                styles.bulletText
+              }
             >
               {item}
             </Text>
@@ -7596,9 +4313,11 @@ function BulletList({
     </View>
   );
 }
+
 // =========================================================
 // MAIN ACCORDION
 // =========================================================
+
 function MainAccordion({
   title,
   open,
@@ -7612,7 +4331,9 @@ function MainAccordion({
 }) {
   return (
     <View
-      style={styles.mainAccordion}
+      style={
+        styles.mainAccordion
+      }
     >
       <Pressable
         onPress={onPress}
@@ -7629,10 +4350,12 @@ function MainAccordion({
         >
           {title}
         </Text>
+
         <Text style={styles.arrow}>
           {open ? "⌃" : "›"}
         </Text>
       </Pressable>
+
       {open && (
         <View
           style={
@@ -7645,9 +4368,11 @@ function MainAccordion({
     </View>
   );
 }
+
 // =========================================================
 // INNER ACCORDION
 // =========================================================
+
 function InnerAccordion({
   title,
   open,
@@ -7661,7 +4386,9 @@ function InnerAccordion({
 }) {
   return (
     <View
-      style={styles.innerAccordion}
+      style={
+        styles.innerAccordion
+      }
     >
       <Pressable
         onPress={onPress}
@@ -7678,6 +4405,7 @@ function InnerAccordion({
         >
           {title}
         </Text>
+
         <Text
           style={
             styles.smallArrow
@@ -7686,6 +4414,7 @@ function InnerAccordion({
           {open ? "⌃" : "›"}
         </Text>
       </Pressable>
+
       {open && (
         <View
           style={
@@ -7698,9 +4427,11 @@ function InnerAccordion({
     </View>
   );
 }
+
 // =========================================================
 // SECTION CARD
 // =========================================================
+
 function SectionCard({
   title,
   children,
@@ -7712,16 +4443,21 @@ function SectionCard({
     <View
       style={styles.sectionCard}
     >
-      <Text style={styles.cardTitle}>
+      <Text
+        style={styles.cardTitle}
+      >
         {title}
       </Text>
+
       {children}
     </View>
   );
 }
+
 // =========================================================
 // SKILL GROUP
 // =========================================================
+
 function SkillGroup({
   title,
   items,
@@ -7731,11 +4467,15 @@ function SkillGroup({
 }) {
   const safeItems =
     safeArray(items);
+
   if (safeItems.length === 0) {
     return null;
   }
+
   return (
-    <View style={styles.skillGroup}>
+    <View
+      style={styles.skillGroup}
+    >
       <Text
         style={
           styles.skillGroupTitle
@@ -7743,6 +4483,7 @@ function SkillGroup({
       >
         {title}
       </Text>
+
       <View
         style={
           styles.skillTagsContainer
@@ -7752,7 +4493,9 @@ function SkillGroup({
           (item, index) => (
             <View
               key={`${item}-${index}`}
-              style={styles.skillTag}
+              style={
+                styles.skillTag
+              }
             >
               <Text
                 style={
@@ -7768,9 +4511,11 @@ function SkillGroup({
     </View>
   );
 }
+
 // =========================================================
 // YOUR RESUME
 // =========================================================
+
 function YourResumeSection({
   analysis,
 }: {
@@ -7778,7 +4523,9 @@ function YourResumeSection({
 }) {
   const skills =
     analysis.skills ||
-    createEmptyAnalysis().skills;
+    createEmptyAnalysis()
+      .skills;
+
   return (
     <View>
       <SectionCard
@@ -7800,13 +4547,14 @@ function YourResumeSection({
           </Text>
         )}
       </SectionCard>
+
       <SectionCard title="🎓 Education">
         <BulletList
           items={analysis.education}
           emptyText="No education information found."
         />
-
       </SectionCard>
+
       <SectionCard title="🛠️ Skills">
         <SkillGroup
           title="Programming Languages"
@@ -7814,28 +4562,33 @@ function YourResumeSection({
             skills.programming_languages
           }
         />
+
         <SkillGroup
           title="Web Technologies"
           items={
             skills.web_technologies
           }
         />
+
         <SkillGroup
           title="Databases"
           items={
             skills.databases
           }
         />
+
         <SkillGroup
           title="Tools & Platforms"
           items={
             skills.tools_platforms
           }
         />
+
         <SkillGroup
           title="Other"
           items={skills.other}
         />
+
         {[
           ...skills.programming_languages,
           ...skills.web_technologies,
@@ -7850,12 +4603,14 @@ function YourResumeSection({
           </Text>
         )}
       </SectionCard>
+
       <SectionCard title="🚀 Projects">
         <BulletList
           items={analysis.projects}
           emptyText="No projects found."
         />
       </SectionCard>
+
       <SectionCard
         title="📜 Certifications"
       >
@@ -7866,6 +4621,7 @@ function YourResumeSection({
           emptyText="No certifications found."
         />
       </SectionCard>
+
       <SectionCard
         title="💼 Internship / Experience"
       >
@@ -7876,6 +4632,7 @@ function YourResumeSection({
           emptyText="No internship or experience found."
         />
       </SectionCard>
+
       {safeArray(
         analysis.languages
       ).length > 0 && (
@@ -7887,6 +4644,7 @@ function YourResumeSection({
           />
         </SectionCard>
       )}
+
       {safeArray(
         analysis.achievements
       ).length > 0 && (
@@ -7901,9 +4659,11 @@ function YourResumeSection({
     </View>
   );
 }
+
 // =========================================================
 // LEARN NEXT CARD
 // =========================================================
+
 function LearnNextCard({
   item,
   index,
@@ -7917,8 +4677,11 @@ function LearnNextCard({
   ] = useState<
     "fresher" | "advanced" | null
   >(null);
+
   return (
-    <View style={styles.learnCard}>
+    <View
+      style={styles.learnCard}
+    >
       <View
         style={styles.learnHeader}
       >
@@ -7933,6 +4696,7 @@ function LearnNextCard({
             {index + 1}
           </Text>
         </View>
+
         <View
           style={
             styles.learnTitleArea
@@ -7943,8 +4707,11 @@ function LearnNextCard({
               styles.learnSkill
             }
           >
-            {cleanText(item.skill)}
+            {cleanText(
+              item.skill
+            )}
           </Text>
+
           <Text
             style={
               styles.learnSubText
@@ -7955,6 +4722,7 @@ function LearnNextCard({
           </Text>
         </View>
       </View>
+
       <InnerAccordion
         title="🌱 Fresher Level"
         open={
@@ -7978,12 +4746,14 @@ function LearnNextCard({
           Learn these topics for
           entry-level software jobs.
         </Text>
+
         <BulletList
           items={
             item.fresher_topics
           }
           emptyText="No fresher-level topics found."
         />
+
         {item.goal ? (
           <View
             style={styles.goalBox}
@@ -7993,6 +4763,7 @@ function LearnNextCard({
             >
               🎯 Fresher Goal
             </Text>
+
             <Text
               style={styles.goalText}
             >
@@ -8003,6 +4774,7 @@ function LearnNextCard({
           </View>
         ) : null}
       </InnerAccordion>
+
       <InnerAccordion
         title="🚀 After Getting a Job — Optional Advanced Topics"
         open={
@@ -8028,6 +4800,7 @@ function LearnNextCard({
           comfortable with fresher-level
           skills.
         </Text>
+
         <BulletList
           items={
             item.advanced_topics
@@ -8038,9 +4811,11 @@ function LearnNextCard({
     </View>
   );
 }
+
 // =========================================================
 // LEARN NEXT
 // =========================================================
+
 function LearnNextSection({
   items,
 }: {
@@ -8052,6 +4827,7 @@ function LearnNextSection({
   ] = useState<number | null>(
     null
   );
+
   if (
     !Array.isArray(items) ||
     items.length === 0
@@ -8065,6 +4841,7 @@ function LearnNextSection({
       </Text>
     );
   }
+
   return (
     <View>
       <Text
@@ -8078,6 +4855,7 @@ function LearnNextSection({
         and entry-level job
         requirements.
       </Text>
+
       {items.map(
         (item, index) => (
           <View
@@ -8115,6 +4893,7 @@ function LearnNextSection({
                   {index + 1}
                 </Text>
               </View>
+
               <Text
                 style={
                   styles.courseTitle
@@ -8124,6 +4903,7 @@ function LearnNextSection({
                   item.skill
                 )}
               </Text>
+
               <Text
                 style={
                   styles.smallArrow
@@ -8135,6 +4915,7 @@ function LearnNextSection({
                   : "›"}
               </Text>
             </Pressable>
+
             {openSkill ===
               index && (
               <View
@@ -8154,9 +4935,11 @@ function LearnNextSection({
     </View>
   );
 }
+
 // =========================================================
-// PROJECT IDEA
+// PROJECT IDEA CARD
 // =========================================================
+
 function ProjectIdeaCard({
   project,
   index,
@@ -8166,6 +4949,7 @@ function ProjectIdeaCard({
 }) {
   const [open, setOpen] =
     useState(false);
+
   return (
     <View
       style={
@@ -8195,6 +4979,7 @@ function ProjectIdeaCard({
             {index + 1}
           </Text>
         </View>
+
         <Text
           style={
             styles.projectTitle
@@ -8204,6 +4989,7 @@ function ProjectIdeaCard({
             project.project_name
           )}
         </Text>
+
         <Text
           style={
             styles.smallArrow
@@ -8212,6 +4998,7 @@ function ProjectIdeaCard({
           {open ? "⌃" : "›"}
         </Text>
       </Pressable>
+
       {open && (
         <View
           style={
@@ -8228,6 +5015,7 @@ function ProjectIdeaCard({
             >
               📝 About the Project
             </Text>
+
             <Text
               style={
                 styles.normalText
@@ -8239,6 +5027,7 @@ function ProjectIdeaCard({
                 "No project description available."}
             </Text>
           </View>
+
           <View
             style={styles.projectPart}
           >
@@ -8249,6 +5038,7 @@ function ProjectIdeaCard({
             >
               🛠️ Technologies Used
             </Text>
+
             <View
               style={
                 styles.technologyContainer
@@ -8278,6 +5068,7 @@ function ProjectIdeaCard({
                 )
               )}
             </View>
+
             {safeArray(
               project.technologies
             ).length === 0 && (
@@ -8291,6 +5082,7 @@ function ProjectIdeaCard({
               </Text>
             )}
           </View>
+
           <View
             style={styles.projectPart}
           >
@@ -8301,6 +5093,7 @@ function ProjectIdeaCard({
             >
               🖥️ Actual Output
             </Text>
+
             <BulletList
               items={
                 project.actual_output
@@ -8313,9 +5106,11 @@ function ProjectIdeaCard({
     </View>
   );
 }
+
 // =========================================================
 // PROJECT IDEAS
 // =========================================================
+
 function ProjectIdeasSection({
   projects,
 }: {
@@ -8333,6 +5128,7 @@ function ProjectIdeasSection({
       </Text>
     );
   }
+
   return (
     <View>
       <Text
@@ -8346,6 +5142,7 @@ function ProjectIdeasSection({
         projects, and fresher-level
         software roles.
       </Text>
+
       {projects.map(
         (project, index) => (
           <ProjectIdeaCard
@@ -8358,9 +5155,11 @@ function ProjectIdeasSection({
     </View>
   );
 }
+
 // =========================================================
 // CAREER ANALYSIS
 // =========================================================
+
 function CareerAnalysisSection({
   analysis,
 }: {
@@ -8370,6 +5169,7 @@ function CareerAnalysisSection({
     analysis.career_analysis ||
     createEmptyAnalysis()
       .career_analysis;
+
   const [
     openSection,
     setOpenSection,
@@ -8382,6 +5182,7 @@ function CareerAnalysisSection({
     | "projects"
     | null
   >(null);
+
   const toggleSection = (
     section:
       | "have"
@@ -8397,6 +5198,7 @@ function CareerAnalysisSection({
         : section
     );
   };
+
   return (
     <View
       style={
@@ -8425,61 +5227,104 @@ function CareerAnalysisSection({
           resume.
         </Text>
 
-        <Text style={styles.profileGroupTitle}>
+        <Text
+          style={
+            styles.profileGroupTitle
+          }
+        >
           🎓 Education
         </Text>
+
         <BulletList
           items={analysis.education}
           emptyText="No education information found."
         />
 
-        <Text style={styles.profileGroupTitle}>
+        <Text
+          style={
+            styles.profileGroupTitle
+          }
+        >
           🛠️ Skills
         </Text>
-        <Text style={styles.profileGroupText}>
+
+        <Text
+          style={
+            styles.profileGroupText
+          }
+        >
           {[
             ...safeArray(
-              analysis.skills?.programming_languages
+              analysis.skills
+                ?.programming_languages
             ),
             ...safeArray(
-              analysis.skills?.web_technologies
+              analysis.skills
+                ?.web_technologies
             ),
             ...safeArray(
-              analysis.skills?.databases
+              analysis.skills
+                ?.databases
             ),
             ...safeArray(
-              analysis.skills?.tools_platforms
+              analysis.skills
+                ?.tools_platforms
             ),
             ...safeArray(
               analysis.skills?.other
             ),
-          ].join(", ") || "No skills found."}
+          ].join(", ") ||
+            "No skills found."}
         </Text>
 
-        <Text style={styles.profileGroupTitle}>
+        <Text
+          style={
+            styles.profileGroupTitle
+          }
+        >
           🚀 Projects
         </Text>
+
         <BulletList
           items={analysis.projects}
           emptyText="No projects found."
         />
 
-        <Text style={styles.profileGroupTitle}>
+        <Text
+          style={
+            styles.profileGroupTitle
+          }
+        >
           📜 Certifications
         </Text>
+
         <BulletList
-          items={analysis.certifications}
+          items={
+            analysis.certifications
+          }
           emptyText="No certifications found."
         />
 
-        <Text style={styles.profileGroupTitle}>
+        <Text
+          style={
+            styles.profileGroupTitle
+          }
+        >
           🌐 Languages
         </Text>
-        <Text style={styles.profileGroupText}>
-          {safeArray(analysis.languages).join(", ") ||
+
+        <Text
+          style={
+            styles.profileGroupText
+          }
+        >
+          {safeArray(
+            analysis.languages
+          ).join(", ") ||
             "No languages found."}
         </Text>
       </InnerAccordion>
+
       <InnerAccordion
         title="📚 What You Should Learn Next"
         open={
@@ -8496,6 +5341,7 @@ function CareerAnalysisSection({
           }
         />
       </InnerAccordion>
+
       <InnerAccordion
         title="🎯 Jobs You Can Apply For"
         open={
@@ -8515,6 +5361,7 @@ function CareerAnalysisSection({
           that match your current
           resume.
         </Text>
+
         <BulletList
           items={
             career.jobs_you_can_apply_for
@@ -8522,6 +5369,7 @@ function CareerAnalysisSection({
           emptyText="No suitable roles found."
         />
       </InnerAccordion>
+
       <InnerAccordion
         title="🛠️ What You Should Improve"
         open={
@@ -8544,6 +5392,7 @@ function CareerAnalysisSection({
           specifically on your resume
           and target software roles.
         </Text>
+
         <BulletList
           items={
             career.what_you_should_improve
@@ -8551,6 +5400,7 @@ function CareerAnalysisSection({
           emptyText="No improvement points found."
         />
       </InnerAccordion>
+
       <InnerAccordion
         title="➡️ Your Next Step"
         open={
@@ -8584,6 +5434,7 @@ function CareerAnalysisSection({
                     {index + 1}
                   </Text>
                 </View>
+
                 <Text
                   style={
                     styles.stepText
@@ -8604,6 +5455,7 @@ function CareerAnalysisSection({
           </Text>
         )}
       </InnerAccordion>
+
       <InnerAccordion
         title="💡 Project Ideas"
         open={
@@ -8625,45 +5477,60 @@ function CareerAnalysisSection({
     </View>
   );
 }
+
 // =========================================================
 // MAIN SCREEN
 // =========================================================
+
 export default function ResumeScreen() {
   const [loading, setLoading] =
     useState(false);
+
   const [analysis, setAnalysis] =
     useState<ResumeAnalysis | null>(
       null
     );
+
   const [
     openSection,
     setOpenSection,
   ] = useState<
     "resume" | "career" | null
   >(null);
+
   const [
     restoring,
     setRestoring,
   ] = useState(true);
+
   const [
     selectedFileName,
     setSelectedFileName,
   ] = useState("");
-  // IMPORTANT:
-  // Prevent old saved data from coming back
-  // after a new resume is selected.
+
+  // NEW:
+  // Error is now shown directly on screen.
+  const [
+    uploadError,
+    setUploadError,
+  ] = useState("");
+
   const hasUploadedNewResume =
     useRef(false);
+
   // =======================================================
   // RESTORE SAVED RESUME
   // =======================================================
+
   useEffect(() => {
     let mounted = true;
+
     const restoreResume =
       async () => {
         try {
           const savedAnalysis =
             await loadResumeAnalysis();
+
           if (
             mounted &&
             !hasUploadedNewResume.current &&
@@ -8672,6 +5539,7 @@ export default function ResumeScreen() {
             setAnalysis(
               savedAnalysis
             );
+
             setOpenSection(
               "resume"
             );
@@ -8687,17 +5555,25 @@ export default function ResumeScreen() {
           }
         }
       };
+
     restoreResume();
+
     return () => {
       mounted = false;
     };
   }, []);
+
   // =======================================================
   // UPLOAD RESUME
   // =======================================================
+
   const uploadResume =
     async () => {
       try {
+        // Clear previous error first.
+        setUploadError("");
+
+        // Open file picker.
         const result =
           await DocumentPicker.getDocumentAsync(
             {
@@ -8708,82 +5584,91 @@ export default function ResumeScreen() {
               copyToCacheDirectory: true,
             }
           );
+
         if (result.canceled) {
           return;
         }
+
         const selectedFile =
           result.assets?.[0];
+
         if (!selectedFile) {
-          Alert.alert(
-            "File Error",
+          setUploadError(
             "No file was selected."
           );
           return;
         }
+
         // =================================================
         // NEW FILE SELECTED
-        // CLEAR OLD RESUME IMMEDIATELY
         // =================================================
+
         hasUploadedNewResume.current =
           true;
+
         setAnalysis(null);
+
         setOpenSection(null);
+
+        setUploadError("");
+
         setSelectedFileName(
           selectedFile.name ||
             "Selected resume"
         );
+
         await clearSavedResumeAnalysis();
+
         setLoading(true);
+
         // =================================================
         // GET TOKEN
         // =================================================
+
         let token = "";
-        if (
-          Platform.OS === "web"
-        ) {
-          token =
-            window.localStorage.getItem(
-              "access_token"
-            ) || "";
-        } else {
-          try {
-            const AsyncStorage =
-              require(
-                "@react-native-async-storage/async-storage"
-              ).default;
+
+        try {
+          if (Platform.OS === "web") {
+            token =
+              window.localStorage.getItem(
+                "access_token"
+              ) || "";
+          } else {
             token =
               (await AsyncStorage.getItem(
                 "access_token"
               )) || "";
-          } catch (
-            storageError
-          ) {
-            console.log(
-              "AsyncStorage error:",
-              storageError
-            );
           }
-        }
-        if (!token) {
-          Alert.alert(
-            "Login Required",
-            "Please login first."
+        } catch (storageError) {
+          console.log(
+            "Storage error:",
+            storageError
           );
-          setLoading(false);
-          return;
+
+          throw new Error(
+            "Could not access login information. Please login again."
+          );
         }
+
+        if (!token) {
+          throw new Error(
+            "Please login first and then upload your resume."
+          );
+        }
+
         // =================================================
-        // FORMDATA
+        // CREATE FORMDATA
         // =================================================
+
         const formData =
           new FormData();
-        if (
-          Platform.OS === "web"
-        ) {
+
+        if (Platform.OS === "web") {
           const fileResponse =
             await fetch(
               selectedFile.uri
             );
+
           if (
             !fileResponse.ok
           ) {
@@ -8791,8 +5676,10 @@ export default function ResumeScreen() {
               "Could not read the selected file."
             );
           }
+
           const blob =
             await fileResponse.blob();
+
           const browserFile =
             new File(
               [blob],
@@ -8805,6 +5692,7 @@ export default function ResumeScreen() {
                   "application/pdf",
               }
             );
+
           formData.append(
             "file",
             browserFile
@@ -8815,94 +5703,153 @@ export default function ResumeScreen() {
             {
               uri:
                 selectedFile.uri,
+
               name:
                 selectedFile.name ||
                 "resume.pdf",
+
               type:
                 selectedFile.mimeType ||
                 "application/pdf",
             } as any
           );
         }
+
         // =================================================
-        // SEND TO BACKEND
+        // SEND FILE TO BACKEND
         // =================================================
+
+        console.log(
+          "Uploading resume to:",
+          `${API_URL}/api/v1/resume/upload`
+        );
+
         const response =
           await fetch(
             `${API_URL}/api/v1/resume/upload?ts=${Date.now()}`,
             {
               method: "POST",
+
               headers: {
                 Authorization:
                   `Bearer ${token}`,
               },
+
               body: formData,
             }
           );
+
         // =================================================
-        // READ RESPONSE
+        // READ RESPONSE AS TEXT FIRST
         // =================================================
+
+        const responseText =
+          await response.text();
+
+        console.log(
+          "Resume API status:",
+          response.status
+        );
+
+        console.log(
+          "Resume API response:",
+          responseText
+        );
+
         let data: any = null;
+
         try {
-          data =
-            await response.json();
+          data = responseText
+            ? JSON.parse(
+                responseText
+              )
+            : null;
         } catch {
           throw new Error(
-            "Backend returned an invalid response."
+            `Backend returned an invalid response (${response.status}).`
           );
         }
+
+        // =================================================
+        // BACKEND ERROR
+        // =================================================
+
         if (!response.ok) {
-          throw new Error(
+          const backendMessage =
             data?.detail ||
-              "Resume upload failed."
+            data?.message ||
+            data?.error ||
+            `Resume upload failed with status ${response.status}.`;
+
+          throw new Error(
+            cleanText(
+              backendMessage
+            )
           );
         }
+
         // =================================================
         // FIND ANALYSIS
         // =================================================
+
         let rawAnalysis =
           data?.analysis;
+
         if (
           rawAnalysis ===
-          undefined
+          undefined ||
+          rawAnalysis === null
         ) {
           rawAnalysis =
             data?.data?.analysis;
         }
+
         if (
           rawAnalysis ===
-          undefined
+          undefined ||
+          rawAnalysis === null
         ) {
           rawAnalysis =
             data?.ai_analysis;
         }
+
         if (
           rawAnalysis ===
-          undefined
+          undefined ||
+          rawAnalysis === null
         ) {
           throw new Error(
-            "Resume analysis was not received from the backend."
+            "Resume was uploaded, but the backend did not return the resume analysis."
           );
         }
+
         // =================================================
-        // NORMALIZE ANALYSIS
+        // NORMALIZE
         // =================================================
+
         const analysisData =
           normalizeAnalysis(
             rawAnalysis
           );
+
         // =================================================
-        // SAVE NEW ANALYSIS
+        // SAVE
         // =================================================
+
         await saveResumeAnalysis(
           analysisData
         );
+
         // =================================================
-        // DISPLAY ONLY NEW ANALYSIS
+        // DISPLAY NEW ANALYSIS
         // =================================================
+
+        setUploadError("");
+
         setAnalysis(
           analysisData
         );
+
         setOpenSection(
           "resume"
         );
@@ -8911,23 +5858,30 @@ export default function ResumeScreen() {
           "Resume upload error:",
           error
         );
-        // IMPORTANT:
-        // Never restore the previous resume
-        // after upload failure.
+
+        // Do not show old resume.
         setAnalysis(null);
+
         setOpenSection(null);
-        Alert.alert(
-          "Upload Failed",
+
+        const message =
           error?.message ||
-            "Something went wrong while uploading the resume."
+          "Something went wrong while uploading the resume.";
+
+        // IMPORTANT:
+        // Show error directly inside screen.
+        setUploadError(
+          message
         );
       } finally {
         setLoading(false);
       }
     };
+
   // =======================================================
   // UI
   // =======================================================
+
   return (
     <ScrollView
       style={styles.container}
@@ -8939,12 +5893,14 @@ export default function ResumeScreen() {
       }
     >
       {/* HEADER */}
+
       <View style={styles.header}>
         <Text
           style={styles.pageTitle}
         >
           📄 Resume Analyzer
         </Text>
+
         <Text
           style={styles.pageSubtitle}
         >
@@ -8953,7 +5909,9 @@ export default function ResumeScreen() {
           guidance.
         </Text>
       </View>
+
       {/* UPLOAD BUTTON */}
+
       <Pressable
         onPress={uploadResume}
         disabled={
@@ -8962,8 +5920,10 @@ export default function ResumeScreen() {
         }
         style={({ pressed }) => [
           styles.uploadButton,
+
           pressed &&
             styles.pressed,
+
           (loading ||
             restoring) &&
             styles.disabledButton,
@@ -8979,6 +5939,7 @@ export default function ResumeScreen() {
               size="small"
               color="#FFFFFF"
             />
+
             <Text
               style={
                 styles.uploadButtonText
@@ -8997,6 +5958,7 @@ export default function ResumeScreen() {
               size="small"
               color="#FFFFFF"
             />
+
             <Text
               style={
                 styles.uploadButtonText
@@ -9015,7 +5977,9 @@ export default function ResumeScreen() {
           </Text>
         )}
       </Pressable>
+
       {/* SELECTED FILE */}
+
       {selectedFileName &&
         !loading && (
           <View
@@ -9030,6 +5994,7 @@ export default function ResumeScreen() {
             >
               Selected Resume
             </Text>
+
             <Text
               style={
                 styles.selectedFileName
@@ -9040,7 +6005,9 @@ export default function ResumeScreen() {
             </Text>
           </View>
         )}
+
       {/* ANALYZING MESSAGE */}
+
       {loading && (
         <View
           style={
@@ -9051,6 +6018,7 @@ export default function ResumeScreen() {
             size="small"
             color="#2563EB"
           />
+
           <Text
             style={
               styles.analyzingText
@@ -9062,7 +6030,34 @@ export default function ResumeScreen() {
           </Text>
         </View>
       )}
+
+      {/* UPLOAD ERROR */}
+
+      {uploadError &&
+        !loading && (
+          <View
+            style={styles.errorBox}
+          >
+            <Text
+              style={
+                styles.errorTitle
+              }
+            >
+              ⚠️ Resume Upload Error
+            </Text>
+
+            <Text
+              style={
+                styles.errorMessage
+              }
+            >
+              {uploadError}
+            </Text>
+          </View>
+        )}
+
       {/* RESULTS */}
+
       {analysis && !loading && (
         <View
           style={
@@ -9070,6 +6065,7 @@ export default function ResumeScreen() {
           }
         >
           {/* YOUR RESUME */}
+
           <MainAccordion
             title="📄 Your Resume"
             open={
@@ -9091,7 +6087,9 @@ export default function ResumeScreen() {
               }
             />
           </MainAccordion>
+
           {/* CAREER ANALYSIS */}
+
           <MainAccordion
             title="🚀 Career Analysis"
             open={
@@ -9115,10 +6113,13 @@ export default function ResumeScreen() {
           </MainAccordion>
         </View>
       )}
+
       {/* EMPTY STATE */}
+
       {!analysis &&
         !loading &&
-        !restoring && (
+        !restoring &&
+        !uploadError && (
           <View
             style={
               styles.emptyState
@@ -9131,6 +6132,7 @@ export default function ResumeScreen() {
             >
               📄
             </Text>
+
             <Text
               style={
                 styles.emptyStateTitle
@@ -9138,10 +6140,11 @@ export default function ResumeScreen() {
             >
               No Resume Uploaded
             </Text>
+
             <Text
               style={
                 styles.emptyStateText
-            }
+              }
             >
               Upload your PDF or DOCX
               resume to see your
@@ -9154,9 +6157,11 @@ export default function ResumeScreen() {
     </ScrollView>
   );
 }
+
 // =========================================================
 // STYLES
 // =========================================================
+
 const styles =
   StyleSheet.create({
     container: {
@@ -9164,24 +6169,29 @@ const styles =
       backgroundColor:
         "#F6F8FC",
     },
+
     contentContainer: {
       padding: 20,
       paddingBottom: 60,
     },
+
     header: {
       marginBottom: 20,
     },
+
     pageTitle: {
       fontSize: 26,
       fontWeight: "800",
       color: "#172033",
       marginBottom: 7,
     },
+
     pageSubtitle: {
       fontSize: 14,
       lineHeight: 21,
       color: "#667085",
     },
+
     uploadButton: {
       backgroundColor:
         "#2563EB",
@@ -9192,11 +6202,13 @@ const styles =
         "center",
       marginBottom: 12,
     },
+
     uploadButtonText: {
       color: "#FFFFFF",
       fontSize: 16,
       fontWeight: "700",
     },
+
     loadingRow: {
       flexDirection:
         "row",
@@ -9204,12 +6216,15 @@ const styles =
         "center",
       gap: 10,
     },
+
     disabledButton: {
       opacity: 0.7,
     },
+
     pressed: {
       opacity: 0.75,
     },
+
     selectedFileBox: {
       backgroundColor:
         "#EEF4FF",
@@ -9220,6 +6235,7 @@ const styles =
       padding: 12,
       marginBottom: 14,
     },
+
     selectedFileLabel: {
       fontSize: 11,
       fontWeight: "800",
@@ -9228,12 +6244,14 @@ const styles =
       textTransform:
         "uppercase",
     },
+
     selectedFileName: {
       fontSize: 13,
       lineHeight: 19,
       color: "#175CD3",
       fontWeight: "600",
     },
+
     analyzingBox: {
       backgroundColor:
         "#FFFFFF",
@@ -9249,15 +6267,46 @@ const styles =
         "center",
       gap: 10,
     },
+
     analyzingText: {
       flex: 1,
       fontSize: 13,
       lineHeight: 19,
       color: "#475467",
     },
+
+    // =====================================================
+    // NEW ERROR STYLES
+    // =====================================================
+
+    errorBox: {
+      backgroundColor:
+        "#FEF2F2",
+      borderWidth: 1,
+      borderColor:
+        "#FECACA",
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 16,
+    },
+
+    errorTitle: {
+      fontSize: 15,
+      fontWeight: "800",
+      color: "#B91C1C",
+      marginBottom: 6,
+    },
+
+    errorMessage: {
+      fontSize: 13,
+      lineHeight: 20,
+      color: "#7F1D1D",
+    },
+
     resultsContainer: {
       gap: 14,
     },
+
     mainAccordion: {
       backgroundColor:
         "#FFFFFF",
@@ -9268,6 +6317,7 @@ const styles =
       borderColor:
         "#E5E7EB",
     },
+
     mainAccordionHeader: {
       minHeight: 62,
       paddingHorizontal: 18,
@@ -9278,18 +6328,21 @@ const styles =
       justifyContent:
         "space-between",
     },
+
     mainAccordionTitle: {
       fontSize: 18,
       fontWeight: "800",
       color: "#172033",
       flex: 1,
     },
+
     arrow: {
       fontSize: 28,
       color: "#475467",
       lineHeight: 30,
       marginLeft: 10,
     },
+
     mainAccordionBody: {
       paddingHorizontal: 14,
       paddingBottom: 14,
@@ -9297,6 +6350,7 @@ const styles =
       borderTopColor:
         "#EEF0F4",
     },
+
     innerAccordion: {
       backgroundColor:
         "#FFFFFF",
@@ -9308,6 +6362,7 @@ const styles =
       overflow:
         "hidden",
     },
+
     innerAccordionHeader: {
       minHeight: 52,
       paddingHorizontal: 14,
@@ -9318,23 +6373,27 @@ const styles =
       justifyContent:
         "space-between",
     },
+
     innerAccordionTitle: {
       flex: 1,
       fontSize: 15,
       fontWeight: "700",
       color: "#1D2939",
     },
+
     smallArrow: {
       fontSize: 24,
       color: "#667085",
       marginLeft: 8,
     },
+
     innerAccordionBody: {
       padding: 14,
       borderTopWidth: 1,
       borderTopColor:
         "#EEF0F4",
     },
+
     sectionCard: {
       backgroundColor:
         "#FAFBFD",
@@ -9345,28 +6404,33 @@ const styles =
       borderColor:
         "#E9ECF2",
     },
+
     cardTitle: {
       fontSize: 16,
       fontWeight: "800",
       color: "#1D2939",
       marginBottom: 12,
     },
+
     normalText: {
       fontSize: 14,
       lineHeight: 21,
       color: "#475467",
     },
+
     emptyText: {
       fontSize: 13,
       lineHeight: 19,
       color: "#98A2B3",
     },
+
     explanationText: {
       fontSize: 13,
       lineHeight: 20,
       color: "#667085",
       marginBottom: 12,
     },
+
     bulletRow: {
       flexDirection:
         "row",
@@ -9374,27 +6438,32 @@ const styles =
         "flex-start",
       marginBottom: 8,
     },
+
     bullet: {
       width: 18,
       fontSize: 16,
       color: "#2563EB",
       fontWeight: "800",
     },
+
     bulletText: {
       flex: 1,
       fontSize: 14,
       lineHeight: 21,
       color: "#475467",
     },
+
     skillGroup: {
       marginBottom: 15,
     },
+
     skillGroupTitle: {
       fontSize: 13,
       fontWeight: "700",
       color: "#667085",
       marginBottom: 8,
     },
+
     skillTagsContainer: {
       flexDirection:
         "row",
@@ -9402,6 +6471,7 @@ const styles =
         "wrap",
       gap: 8,
     },
+
     skillTag: {
       backgroundColor:
         "#EEF4FF",
@@ -9409,11 +6479,13 @@ const styles =
       paddingHorizontal: 12,
       paddingVertical: 7,
     },
+
     skillTagText: {
       color: "#175CD3",
       fontSize: 13,
       fontWeight: "600",
     },
+
     courseAccordion: {
       backgroundColor:
         "#FFFFFF",
@@ -9425,6 +6497,7 @@ const styles =
       overflow:
         "hidden",
     },
+
     courseHeader: {
       minHeight: 58,
       paddingHorizontal: 13,
@@ -9433,6 +6506,7 @@ const styles =
       alignItems:
         "center",
     },
+
     courseNumber: {
       width: 30,
       height: 30,
@@ -9445,27 +6519,32 @@ const styles =
         "center",
       marginRight: 10,
     },
+
     courseNumberText: {
       color: "#FFFFFF",
       fontSize: 13,
       fontWeight: "800",
     },
+
     courseTitle: {
       flex: 1,
       fontSize: 15,
       fontWeight: "800",
       color: "#172033",
     },
+
     courseBody: {
       padding: 8,
       paddingTop: 0,
     },
+
     learnCard: {
       backgroundColor:
         "#F8FAFC",
       borderRadius: 10,
       padding: 8,
     },
+
     learnHeader: {
       flexDirection:
         "row",
@@ -9473,6 +6552,7 @@ const styles =
         "flex-start",
       padding: 8,
     },
+
     numberCircle: {
       width: 30,
       height: 30,
@@ -9485,31 +6565,37 @@ const styles =
         "center",
       marginRight: 10,
     },
+
     numberText: {
       color: "#FFFFFF",
       fontWeight: "800",
       fontSize: 13,
     },
+
     learnTitleArea: {
       flex: 1,
     },
+
     learnSkill: {
       fontSize: 16,
       fontWeight: "800",
       color: "#172033",
       marginBottom: 4,
     },
+
     learnSubText: {
       fontSize: 12,
       lineHeight: 18,
       color: "#667085",
     },
+
     levelDescription: {
       fontSize: 13,
       lineHeight: 20,
       color: "#667085",
       marginBottom: 10,
     },
+
     goalBox: {
       backgroundColor:
         "#F0FDF4",
@@ -9520,17 +6606,20 @@ const styles =
       borderColor:
         "#DCFCE7",
     },
+
     goalLabel: {
       fontSize: 12,
       fontWeight: "800",
       color: "#166534",
       marginBottom: 5,
     },
+
     goalText: {
       fontSize: 13,
       lineHeight: 19,
       color: "#475467",
     },
+
     projectAccordion: {
       backgroundColor:
         "#FFFFFF",
@@ -9542,6 +6631,7 @@ const styles =
         "hidden",
       marginBottom: 10,
     },
+
     projectHeader: {
       minHeight: 58,
       paddingHorizontal: 13,
@@ -9550,6 +6640,7 @@ const styles =
       alignItems:
         "center",
     },
+
     projectNumber: {
       width: 30,
       height: 30,
@@ -9562,17 +6653,20 @@ const styles =
         "center",
       marginRight: 10,
     },
+
     projectNumberText: {
       color: "#FFFFFF",
       fontSize: 13,
       fontWeight: "800",
     },
+
     projectTitle: {
       flex: 1,
       fontSize: 15,
       fontWeight: "800",
       color: "#172033",
     },
+
     projectBody: {
       padding: 14,
       borderTopWidth: 1,
@@ -9581,15 +6675,18 @@ const styles =
       backgroundColor:
         "#FAFBFD",
     },
+
     projectPart: {
       marginBottom: 18,
     },
+
     projectPartTitle: {
       fontSize: 14,
       fontWeight: "800",
       color: "#344054",
       marginBottom: 9,
     },
+
     technologyContainer: {
       flexDirection:
         "row",
@@ -9597,6 +6694,7 @@ const styles =
         "wrap",
       gap: 8,
     },
+
     technologyTag: {
       backgroundColor:
         "#F4EBFF",
@@ -9604,11 +6702,13 @@ const styles =
       paddingHorizontal: 11,
       paddingVertical: 7,
     },
+
     technologyText: {
       fontSize: 12,
       fontWeight: "700",
       color: "#6941C6",
     },
+
     stepRow: {
       flexDirection:
         "row",
@@ -9616,6 +6716,7 @@ const styles =
         "flex-start",
       marginBottom: 11,
     },
+
     stepNumber: {
       width: 26,
       height: 26,
@@ -9628,11 +6729,13 @@ const styles =
         "center",
       marginRight: 10,
     },
+
     stepNumberText: {
       color: "#175CD3",
       fontSize: 12,
       fontWeight: "800",
     },
+
     stepText: {
       flex: 1,
       fontSize: 14,
@@ -9640,6 +6743,7 @@ const styles =
       color: "#475467",
       paddingTop: 2,
     },
+
     emptyState: {
       backgroundColor:
         "#FFFFFF",
@@ -9652,16 +6756,19 @@ const styles =
       borderColor:
         "#E5E7EB",
     },
+
     emptyStateIcon: {
       fontSize: 42,
       marginBottom: 12,
     },
+
     emptyStateTitle: {
       fontSize: 18,
       fontWeight: "800",
       color: "#172033",
       marginBottom: 8,
     },
+
     emptyStateText: {
       fontSize: 14,
       lineHeight: 21,
@@ -9669,6 +6776,7 @@ const styles =
       textAlign:
         "center",
     },
+
     profileGroupTitle: {
       fontSize: 14,
       fontWeight: "800",
@@ -9676,12 +6784,14 @@ const styles =
       marginTop: 10,
       marginBottom: 4,
     },
+
     profileGroupText: {
       fontSize: 14,
       lineHeight: 21,
       color: "#475569",
       marginBottom: 5,
     },
+
     careerContainer: {
       paddingTop: 2,
     },
